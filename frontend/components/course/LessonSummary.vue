@@ -69,7 +69,9 @@ const generateSummary = async (type: 'paragraph' | 'sentence' | 'bullets') => {
 
     summary.value = response.summary
   } catch (error: any) {
-    console.error('Error generating summary:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error generating summary:', error)
+    }
     summary.value = 'Unable to generate summary at this time. Please try again.'
   } finally {
     loading.value = false

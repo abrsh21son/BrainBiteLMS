@@ -234,7 +234,9 @@ const handleResetPassword = async () => {
     }, 2000)
   } catch (error: any) {
     errorMsg.value = error?.message || 'Failed to reset password. Please try again.'
-    console.error('Password reset error:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Password reset error:', error)
+    }
   } finally {
     loading.value = false
   }

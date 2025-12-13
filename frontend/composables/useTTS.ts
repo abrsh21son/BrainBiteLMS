@@ -55,7 +55,9 @@ export const useTTS = () => {
 
   const speakText = (text: string, style: VoiceStyle = 'default') => {
     if (!process.client || !window.speechSynthesis) {
-      console.warn('Text-to-speech is not supported in this browser');
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Text-to-speech is not supported in this browser');
+      }
       return;
     }
 
@@ -114,7 +116,9 @@ export const useTTS = () => {
     };
 
     utterance.onerror = (error) => {
-      console.error('TTS error:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('TTS error:', error);
+      }
       isSpeaking.value = false;
       currentUtterance = null;
     };

@@ -210,7 +210,9 @@ const submitAssessment = async () => {
       
       explanations.value[question.id] = response.explanation
     } catch (error) {
-      console.error('Error generating explanation:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error generating explanation:', error)
+      }
       explanations.value[question.id] = selectedOption.is_correct 
         ? 'Correct! Great job!' 
         : 'Not quite right, but keep learning!'
@@ -227,7 +229,9 @@ const loadRecommendations = async () => {
     const response = await apiClient.get<{ recommendations: string[] }>(`/api/courses/${props.courseId}/recommendations`)
     recommendations.value = response.recommendations || []
   } catch (error) {
-    console.error('Error loading recommendations:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error loading recommendations:', error)
+    }
     // Don't show error to user, just don't show recommendations
   }
 }

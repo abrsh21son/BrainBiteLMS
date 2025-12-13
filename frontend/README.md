@@ -1,75 +1,47 @@
-# Nuxt Minimal Starter
+# BrainBite Frontend
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+Nuxt 3 frontend application for the BrainBite LMS platform.
 
-## Setup
-
-Make sure to install dependencies:
+## Quick Start
 
 ```bash
-# npm
+# Install dependencies
 npm install
 
-# pnpm
-pnpm install
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your actual values
 
-# yarn
-yarn install
-
-# bun
-bun install
-```
-
-## Development Server
-
-Start the development server on `http://localhost:3000`:
-
-```bash
-# npm
+# Run in development mode
 npm run dev
-
-# pnpm
-pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
 ```
 
-## Production
+The application will be available at `http://localhost:3001`
 
-Build the application for production:
+## Environment Variables
+
+See `.env.example` for required environment variables:
+- `NUXT_PUBLIC_SUPABASE_URL` - Your Supabase project URL
+- `NUXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anon/public key
+- `NUXT_PUBLIC_BACKEND_URL` - Backend API URL (default: http://localhost:3000)
+
+## Project Structure
+
+```
+frontend/
+├── pages/          # Route pages
+├── components/     # Vue components
+├── composables/    # Reusable composables
+├── layouts/        # Layout templates
+├── middleware/     # Route middleware
+└── utils/          # Utility functions
+```
+
+## Build for Production
 
 ```bash
-# npm
 npm run build
-
-# pnpm
-pnpm build
-
-# yarn
-yarn build
-
-# bun
-bun run build
-```
-
-Locally preview production build:
-
-```bash
-# npm
 npm run preview
-
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
 ```
 
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+For more details, see the main [README.md](../README.md) in the project root.

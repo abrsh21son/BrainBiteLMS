@@ -22,7 +22,10 @@ export const useEnrollment = () => {
         const data = JSON.parse(stored)
         enrollments.value = new Map(Object.entries(data))
       } catch (e) {
-        console.error('Failed to load enrollments:', e)
+        // Silently fail - enrollment data will be empty, user can re-enroll
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Failed to load enrollments:', e)
+        }
       }
     }
   }

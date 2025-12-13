@@ -25,8 +25,10 @@ export const useCourseGeneration = () => {
         throw new Error('No course ID returned from server');
       }
     } catch (e: any) {
-      console.error('Course generation error:', e);
       error.value = handleApiError(e);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Course generation error:', e);
+      }
     } finally {
       loading.value = false;
     }

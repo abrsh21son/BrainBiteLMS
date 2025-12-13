@@ -121,7 +121,9 @@ const handleLogout = async () => {
     await client.auth.signOut()
     await router.push('/login')
   } catch (error) {
-    console.error('Error signing out:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error signing out:', error)
+    }
   }
 }
 

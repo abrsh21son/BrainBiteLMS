@@ -327,7 +327,9 @@ const handleContinueLearning = async () => {
     const validIndex = Math.max(0, Math.min(nextIndex, maxLessonIndex))
     await navigateTo(`/courses/${courseId}/lesson/${validIndex}`)
   } catch (error) {
-    console.error('Error in handleContinueLearning:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error in handleContinueLearning:', error)
+    }
     // Fallback to first lesson if there's an error
     await navigateTo(`/courses/${courseId}/lesson/0`)
   }

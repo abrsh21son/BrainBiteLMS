@@ -112,7 +112,9 @@ const sendMessage = async () => {
       role: 'assistant',
       content: 'Sorry, I encountered an error. Please try again.'
     }
-    console.error('Error asking question:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error asking question:', error)
+    }
   } finally {
     loading.value = false
     scrollToBottom()
