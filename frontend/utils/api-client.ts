@@ -1,0 +1,176 @@
+import type { ApiResponse, ApiErrorResponse } from '~/types';
+
+export class ApiClient {
+  private _baseURL: string | null = null;
+  
+  private getBaseURL(): string {
+    if (this._baseURL) {
+      return this._baseURL;
+    }
+    
+    // Use environment variable directly (works in both SSR and client)
+    // The runtime config is set from this env var in nuxt.config.ts
+    // Using env var directly avoids calling useRuntimeConfig outside setup context
+    const baseURL = process.env.NUXT_PUBLIC_BACKEND_URL || 'http://localhost:3000';
+    
+    this._baseURL = baseURL;
+    return baseURL;
+  }
+
+  private async getAuthHeaders(): Promise<Record<string, string>> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    try {
+      const supabase = useSupabaseClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.access_token) {
+        headers.Authorization = `Bearer ${session.access_token}`;
+      }
+    } catch (error) {
+      console.warn('Failed to get auth token:', error);
+    }
+
+    return headers;
+  }
+
+  async get<T>(url: string, options?: RequestInit): Promise<T> {
+    const headers = await this.getAuthHeaders();
+    
+    try {
+      const response = await $fetch<ApiResponse<T>>(`${this.getBaseURL()}${url}`, {
+        ...options,
+        method: 'GET',
+        headers: {
+          ...headers,
+          ...options?.headers,
+        },
+      });
+
+      return this.extractData(response);
+    } catch (error: any) {
+      throw this.handleError(error);
+    }
+  }
+
+  async post<T>(url: string, body?: any, options?: RequestInit): Promise<T> {
+    const headers = await this.getAuthHeaders();
+
+    try {
+      const response = await $fetch<ApiResponse<T>>(`${this.getBaseURL()}${url}`, {
+        ...options,
+        method: 'POST',
+        headers: {
+          ...headers,
+          ...options?.headers,
+        },
+        body,
+      });
+
+      return this.extractData(response);
+    } catch (error: any) {
+      throw this.handleError(error);
+    }
+  }
+
+  async put<T>(url: string, body?: any, options?: RequestInit): Promise<T> {
+    const headers = await this.getAuthHeaders();
+
+    try {
+      const response = await $fetch<ApiResponse<T>>(`${this.getBaseURL()}${url}`, {
+        ...options,
+        method: 'PUT',
+        headers: {
+          ...headers,
+          ...options?.headers,
+        },
+        body,
+      });
+
+      return this.extractData(response);
+    } catch (error: any) {
+      throw this.handleError(error);
+    }
+  }
+
+  async delete<T>(url: string, options?: RequestInit): Promise<T> {
+    const headers = await this.getAuthHeaders();
+
+    try {
+      const response = await $fetch<ApiResponse<T>>(`${this.getBaseURL()}${url}`, {
+        ...options,
+        method: 'DELETE',
+        headers: {
+          ...headers,
+          ...options?.headers,
+        },
+      });
+
+      return this.extractData(response);
+    } catch (error: any) {
+      throw this.handleError(error);
+    }
+  }
+
+  private extractData<T>(response: any): T {
+    // Backend returns { success: true, data: T, timestamp: string }
+    if (response?.success && response?.data !== undefined) {
+      return response.data;
+    }
+    // Fallback for direct data
+    if (response?.data !== undefined) {
+      return response.data;
+    }
+    // If response is already the data (shouldn't happen with our interceptor)
+    return response;
+  }
+
+  private handleError(error: any): Error {
+    // Nuxt $fetch error structure
+    if (error.data) {
+      const apiError = error.data as ApiErrorResponse;
+      return new Error(apiError.message || 'An error occurred');
+    }
+    // H3/Nitro error structure
+    if (error.response?._data) {
+      const apiError = error.response._data as ApiErrorResponse;
+      return new Error(apiError.message || 'An error occurred');
+    }
+    // Network errors
+    if (error.message) {
+      // Check if it's a network error
+      if (error.message.includes('fetch') || error.message.includes('network')) {
+        return new Error('Network error: Could not connect to the server. Please check if the backend is running.');
+      }
+      return new Error(error.message);
+    }
+    return new Error('An unexpected error occurred');
+  }
+}
+
+// Lazy singleton - only create when accessed
+let apiClientInstance: ApiClient | null = null;
+
+export function getApiClient(): ApiClient {
+  if (!apiClientInstance) {
+    apiClientInstance = new ApiClient();
+  }
+  return apiClientInstance;
+}
+
+// Export a Proxy for backward compatibility
+export const apiClient = new Proxy({} as ApiClient, {
+  get(_target, prop: string | symbol) {
+    const instance = getApiClient();
+    const value = instance[prop as keyof ApiClient];
+    return typeof value === 'function' ? value.bind(instance) : value;
+  },
+  set(_target, prop: string | symbol, value: any) {
+    const instance = getApiClient();
+    (instance as any)[prop] = value;
+    return true;
+  }
+});
+
