@@ -78,32 +78,25 @@
         </div>
       </div>
       
-      <!-- Feedback Message -->
+      <!-- AI Explanation -->
       <div 
         v-if="isSubmitted && selectedOptions[question.id]"
         class="ml-12 mt-4 p-4 rounded-lg border"
-        :class="getSelectedOption(question.id)?.is_correct ? 'bg-green-500/10 border-green-500/30' : 'bg-red-500/10 border-red-500/30'"
+        :class="loadingExplanations[question.id] ? 'bg-dark-surface border-dark-border' : 'bg-blue-500/10 border-blue-500/30'"
       >
         <div class="flex items-start space-x-3">
-          <svg 
-            :class="getSelectedOption(question.id)?.is_correct ? 'text-green-400' : 'text-red-400'"
-            class="w-5 h-5 mt-0.5 flex-shrink-0" 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
-          >
-            <path v-if="getSelectedOption(question.id)?.is_correct" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <svg class="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
           </svg>
           <div class="flex-1">
-            <p :class="getSelectedOption(question.id)?.is_correct ? 'text-green-400' : 'text-red-400'" class="text-sm font-semibold mb-1">
-              {{ getSelectedOption(question.id)?.is_correct ? 'Correct!' : 'Incorrect' }}
-            </p>
-            <p class="text-sm text-gray-300 leading-relaxed">
-              {{ getSelectedOption(question.id)?.is_correct 
-                ? 'Great job! You got this one right.' 
-                : `The correct answer is: ${getCorrectOption(question.id)?.option_text}` }}
-            </p>
+            <p class="text-sm font-semibold text-white mb-2">💡 AI Explanation</p>
+            <div v-if="loadingExplanations[question.id]" class="text-sm text-gray-400">
+              <div class="inline-flex items-center space-x-2">
+                <div class="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-400"></div>
+                <span>Generating explanation...</span>
+              </div>
+            </div>
+            <p v-else class="text-sm text-gray-300 leading-relaxed">{{ explanations[question.id] || 'Loading explanation...' }}</p>
           </div>
         </div>
       </div>
@@ -111,13 +104,49 @@
 
     <!-- Results Section -->
     <div class="pt-6 border-t border-dark-border">
+      <!-- Completion Success Message -->
+      <div v-if="isSubmitted && isCourseCompleted" class="mb-6 p-6 rounded-xl bg-gradient-to-r from-green-500/20 to-green-600/10 border-2 border-green-500/50">
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0">
+            <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
+              <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+          </div>
+          <div class="flex-1">
+            <h3 class="text-xl font-bold text-white mb-2">🎉 Course Completed!</h3>
+            <p class="text-gray-300 mb-4">Congratulations! You've successfully completed this course. Well done!</p>
+            <div class="flex flex-wrap gap-3">
+              <NuxtLink 
+                v-if="props.courseId" 
+                :to="`/courses/${props.courseId}`"
+                class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all"
+              >
+                View Course
+                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </NuxtLink>
+              <NuxtLink 
+                to="/courses"
+                class="inline-flex items-center px-4 py-2 bg-dark-surface hover:bg-dark-card border border-dark-border text-gray-300 hover:text-white rounded-lg font-medium transition-all"
+              >
+                Browse More Courses
+                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </NuxtLink>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Results Card -->
-      <div v-if="isSubmitted" class="mb-6 p-6 rounded-lg" :class="scorePercentage >= 50 ? 'bg-green-500/10 border border-green-500/30' : 'bg-red-500/10 border border-red-500/30'">
+      <div v-if="isSubmitted" class="mb-6 p-6 rounded-lg" :class="scorePercentage >= 80 ? 'bg-green-500/10 border border-green-500/30' : scorePercentage >= 50 ? 'bg-yellow-500/10 border border-yellow-500/30' : 'bg-red-500/10 border border-red-500/30'">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-xl font-bold text-white">Your Results</h3>
-          <span class="text-3xl font-bold" :class="scorePercentage >= 50 ? 'text-green-400' : 'text-red-400'">
-            {{ scorePercentage }}%
-          </span>
+          <span class="text-3xl font-bold" :class="scoreClass">{{ scorePercentage }}%</span>
         </div>
         <p class="text-gray-300 mb-4">
           You answered <span class="font-semibold text-white">{{ score }}</span> out of <span class="font-semibold text-white">{{ questions.length }}</span> questions correctly.
@@ -125,7 +154,7 @@
         <div class="w-full bg-dark-surface rounded-full h-3">
           <div 
             class="h-3 rounded-full transition-all duration-500" 
-            :class="scorePercentage >= 50 ? 'bg-green-500' : 'bg-red-500'"
+            :class="scorePercentage >= 80 ? 'bg-green-500' : scorePercentage >= 50 ? 'bg-yellow-500' : 'bg-red-500'"
             :style="{ width: `${scorePercentage}%` }"
           ></div>
         </div>
@@ -141,16 +170,20 @@
         </button>
         
         <NuxtLink 
-          to="/courses"
+          v-if="props.courseId" 
+          :to="`/courses/${props.courseId}`"
           class="text-sm text-gray-400 hover:text-purple-400 transition-colors flex items-center"
         >
-          Browse More Courses
+          Back to Course
           <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
           </svg>
         </NuxtLink>
       </div>
     </div>
+
+    <!-- Course Recommendations -->
+    <CourseRecommendations v-if="isSubmitted && recommendations.length > 0" :recommendations="recommendations" />
   </div>
 </template>
 
@@ -162,6 +195,12 @@ const props = defineProps<{
 
 const selectedOptions = ref<Record<string, string>>({})
 const isSubmitted = ref(false)
+const explanations = ref<Record<string, string>>({})
+const loadingExplanations = ref<Record<string, boolean>>({})
+const recommendations = ref<string[]>([])
+
+const apiClient = useApiClient()
+const { markCompleted, isCompleted } = useEnrollment()
 
 const selectOption = (questionId: string, optionId: string) => {
   if (isSubmitted.value) return
@@ -184,8 +223,67 @@ const allQuestionsAnswered = computed(() => {
   return Object.keys(selectedOptions.value).length === props.questions.length
 })
 
-const submitAssessment = () => {
+const isCourseCompleted = computed(() => {
+  return props.courseId ? isCompleted(props.courseId) : false
+})
+
+const submitAssessment = async () => {
   isSubmitted.value = true
+  
+  // Mark assessment as completed and update enrollment progress
+  if (props.courseId) {
+    // Mark course as completed when assessment is submitted
+    markCompleted(props.courseId, 4) // 4 pages + 1 assessment = 5 total
+  }
+  
+  // Generate explanations for all answered questions
+  for (const question of props.questions) {
+    const selectedOptionId = selectedOptions.value[question.id]
+    if (!selectedOptionId) continue
+
+    const selectedOption = question.options?.find((opt: any) => opt.id === selectedOptionId)
+    const correctOption = question.options?.find((opt: any) => opt.is_correct)
+    
+    if (!selectedOption || !correctOption) continue
+
+    loadingExplanations.value[question.id] = true
+    
+    try {
+      const response = await apiClient.post<{ explanation: string }>('/api/courses/explain-answer', {
+        question: question.question_text,
+        correctAnswer: correctOption.option_text,
+        userAnswer: selectedOption.option_text,
+        isCorrect: selectedOption.is_correct
+      })
+      
+      explanations.value[question.id] = response.explanation
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error generating explanation:', error)
+      }
+      explanations.value[question.id] = selectedOption.is_correct 
+        ? 'Correct! Great job!' 
+        : 'Not quite right, but keep learning!'
+    } finally {
+      loadingExplanations.value[question.id] = false
+    }
+  }
+
+  // Load recommendations after submission
+  await loadRecommendations()
+}
+
+const loadRecommendations = async () => {
+  if (!props.courseId) return
+  try {
+    const response = await apiClient.get<{ recommendations: string[] }>(`/api/courses/${props.courseId}/recommendations`)
+    recommendations.value = response.recommendations || []
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error loading recommendations:', error)
+    }
+    // Don't show error to user, just don't show recommendations
+  }
 }
 
 const score = computed(() => {
@@ -203,5 +301,10 @@ const score = computed(() => {
 const scorePercentage = computed(() => {
   if (props.questions.length === 0) return 0
   return Math.round((score.value / props.questions.length) * 100)
+})
+
+const scoreClass = computed(() => {
+  const percentage = scorePercentage.value
+  return percentage >= 80 ? 'text-green-400' : (percentage >= 50 ? 'text-yellow-400' : 'text-red-400')
 })
 </script>

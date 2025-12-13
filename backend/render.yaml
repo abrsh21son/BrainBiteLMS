@@ -1,0 +1,28 @@
+# Render Blueprint for Backend Deployment
+# This file can be used for automated deployment setup on Render
+
+services:
+  - type: web
+    name: brainbite-backend
+    env: node
+    buildCommand: cd backend && npm install && npm run build
+    startCommand: cd backend && npm run start:prod
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: SUPABASE_URL
+        sync: false  # Set manually in Render dashboard
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false  # Set manually in Render dashboard
+      - key: SUPABASE_JWT_SECRET
+        sync: false  # Set manually in Render dashboard
+      - key: AI_API_KEY
+        sync: false  # Set manually in Render dashboard
+      - key: AI_API_URL
+        value: https://api.groq.com/openai/v1
+      - key: AI_MODEL
+        value: llama-3.1-8b-instant
+      - key: FRONTEND_URL
+        sync: false  # Set after frontend deployment

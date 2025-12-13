@@ -23,6 +23,15 @@
 
         <!-- Desktop Navigation -->
         <div class="hidden md:flex items-center space-x-1 flex-1 justify-center">
+          <a 
+            v-if="route.path === '/'" 
+            href="#featured-courses"
+            @click.prevent="scrollToSection('featured-courses')"
+            class="px-4 py-2 rounded-lg text-sm font-medium transition-all relative group text-gray-300 hover:text-white hover:bg-dark-card"
+          >
+            <span class="relative z-10">Featured Courses</span>
+          </a>
+          
           <NuxtLink 
             to="/courses" 
             class="px-4 py-2 rounded-lg text-sm font-medium transition-all relative group"
@@ -84,6 +93,15 @@
         v-if="mobileMenuOpen"
         class="md:hidden pb-4 border-t border-dark-border mt-2 pt-4 space-y-1"
       >
+        <a 
+          v-if="route.path === '/'" 
+          href="#featured-courses"
+          @click.prevent="scrollToSection('featured-courses'); mobileMenuOpen = false"
+          class="block px-4 py-3 rounded-lg text-base font-medium transition-all text-gray-300 hover:text-white hover:bg-dark-card"
+        >
+          Featured Courses
+        </a>
+        
         <NuxtLink 
           to="/courses" 
           @click="mobileMenuOpen = false"
@@ -114,6 +132,26 @@ const mobileMenuOpen = ref(false)
 
 const isActive = (path: string) => {
   return route.path.startsWith(path)
+}
+
+const scrollToSection = (sectionId: string) => {
+  if (route.path !== '/') {
+    // If not on home page, navigate to home first, then scroll
+    router.push('/').then(() => {
+      setTimeout(() => {
+        const element = document.getElementById(sectionId)
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }, 100)
+    })
+  } else {
+    // Already on home page, just scroll
+    const element = document.getElementById(sectionId)
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
 }
 
 const handleLogout = async () => {

@@ -75,19 +75,19 @@ export const useAuth = () => {
         throw error;
       }
 
-      // If user is automatically confirmed (email confirmation disabled), redirect to courses
+      // If user is automatically confirmed (email confirmation disabled), redirect to login
       if (data.user && data.session) {
-        // Check for redirect path from course navigation
-        const redirectPath = sessionStorage.getItem('redirectAfterLogin');
-        if (redirectPath) {
-          sessionStorage.removeItem('redirectAfterLogin');
-          await router.push(redirectPath);
-        } else {
-          await router.push('/courses');
-        }
+        // Auto-confirmed users should go to login to sign in
+        successMsg.value = 'Account created successfully! Redirecting to login...';
+        setTimeout(async () => {
+          await router.push('/login');
+        }, 2000);
       } else {
-        // Success message - user needs to confirm email
-        successMsg.value = 'Success! Please check your email for the confirmation link before signing in.';
+        // Success message - user needs to confirm email, then redirect to login
+        successMsg.value = 'Success! Please check your email for the confirmation link. You will be redirected to login.';
+        setTimeout(async () => {
+          await router.push('/login');
+        }, 3000);
       }
     } catch (error: any) {
       errorMsg.value = normalizeErrorMessage(error);

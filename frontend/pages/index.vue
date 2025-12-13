@@ -180,7 +180,7 @@
     </section>
 
     <!-- Featured Courses Section -->
-    <section class="py-20 px-4 sm:px-6 lg:px-8 bg-dark-surface border-t border-dark-border">
+    <section id="featured-courses" class="py-20 px-4 sm:px-6 lg:px-8 bg-dark-surface border-t border-dark-border">
       <div class="max-w-7xl mx-auto">
         <div class="text-center mb-12">
           <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Featured Courses</h2>
@@ -191,7 +191,7 @@
 
         <!-- Loading State -->
         <div v-if="coursesLoading" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <div v-for="i in 6" :key="i" class="bg-dark-card rounded-2xl border border-dark-border p-6 animate-pulse">
+          <div v-for="i in 3" :key="i" class="bg-dark-card rounded-2xl border border-dark-border p-6 animate-pulse">
             <div class="h-32 bg-dark-surface rounded-lg mb-4"></div>
             <div class="h-4 bg-dark-surface rounded w-1/4 mb-3"></div>
             <div class="h-6 bg-dark-surface rounded w-3/4 mb-2"></div>
@@ -247,6 +247,7 @@
 
               <!-- Action Button -->
               <button
+                @click.stop="handleCourseClick(course.id)"
                 class="w-full flex justify-center items-center px-6 py-3.5 border border-transparent text-sm font-semibold rounded-xl text-white bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 transition-all transform group-hover:scale-105 shadow-lg group-hover:shadow-xl"
               >
                 <span>Start Learning</span>
@@ -838,9 +839,14 @@ const { navigateToCourse } = useCourseNavigation()
 // Fetch courses on page load (no auth required for listing)
 await fetchCourses()
 
-// Show first 6 courses as featured
+// Show latest 3 courses as featured (sorted by created_at DESC)
 const featuredCourses = computed(() => {
-  return courses.value.slice(0, 6)
+  const sorted = [...courses.value].sort((a, b) => {
+    const dateA = new Date(a.created_at).getTime()
+    const dateB = new Date(b.created_at).getTime()
+    return dateB - dateA // Latest first
+  })
+  return sorted.slice(0, 3) // Only show 3 latest courses
 })
 
 const handleCourseClick = (courseId: string) => {

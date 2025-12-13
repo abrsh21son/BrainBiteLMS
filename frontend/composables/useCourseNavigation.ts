@@ -11,10 +11,10 @@ export const useCourseNavigation = () => {
       return router.push(`/courses/${courseId}`)
     }
 
-    // If not logged in, redirect to login with return URL
+    // If not logged in, redirect to login page
     // Store the course ID in sessionStorage for after login
     sessionStorage.setItem('redirectAfterLogin', `/courses/${courseId}`)
-    return router.push('/login?redirect=signup')
+    return router.push('/login')
   }
 
   const getRedirectPath = (): string | null => {
