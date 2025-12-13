@@ -1,7 +1,7 @@
 # BrainBite - AI-Powered Learning Management System
 
 ## Overview
-BrainBite is a lightweight e-learning MVP that allows users to generate courses using AI, browse them, and take assessments. Built as a modern, full-stack application with a focus on user experience and AI-powered content generation.
+BrainBite is an AI-powered LMS that is suitable for every learner to create courses based on their level and status, giving easy and appropriate contents to learners. It's a lightweight e-learning MVP that allows users to generate courses using AI, browse them, and take assessments. Built as a modern, full-stack application with a focus on user experience and AI-powered content generation.
 
 ## Features
 
