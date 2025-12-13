@@ -214,73 +214,31 @@
             </div>
 
             <!-- Action Buttons -->
-            <ClientOnly>
-              <template #default>
-                <div class="space-y-2">
-                  <!-- Enroll Button (if not enrolled) -->
-                  <button
-                    v-if="!isEnrolled(course.id)"
-                    @click="handleEnroll(course.id)"
-                    type="button"
-                    class="w-full flex justify-center items-center px-6 py-3.5 border border-transparent text-sm font-semibold rounded-xl text-white bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 transition-all transform group-hover:scale-105 shadow-lg group-hover:shadow-xl"
-                  >
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    <span>Enroll</span>
-                  </button>
+            <div class="space-y-2">
+              <!-- Open Course Button -->
+              <button
+                @click="handleViewCourse(course.id)"
+                type="button"
+                class="w-full flex justify-center items-center px-6 py-3.5 border border-transparent text-sm font-semibold rounded-xl text-white bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 transition-all transform group-hover:scale-105 shadow-lg group-hover:shadow-xl"
+              >
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                <span>Open Course</span>
+              </button>
 
-                  <!-- View Next / Continue Button (if enrolled and not completed) -->
-                  <button
-                    v-else-if="isEnrolled(course.id) && !isCompleted(course.id)"
-                    @click="handleContinueLearning(course.id)"
-                    type="button"
-                    class="w-full flex justify-center items-center px-6 py-3.5 border border-transparent text-sm font-semibold rounded-xl text-white bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 transition-all transform group-hover:scale-105 shadow-lg group-hover:shadow-xl"
-                  >
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
-                    <span>View Next</span>
-                  </button>
-
-                  <!-- View Course / Completed Button -->
-                  <NuxtLink
-                    :to="`/courses/${course.id}`"
-                    class="w-full flex justify-center items-center px-6 py-3.5 border border-dark-border text-sm font-semibold rounded-xl transition-all transform group-hover:scale-105"
-                    :class="isCompleted(course.id) 
-                      ? 'text-green-400 bg-green-500/10 hover:bg-green-500/20 hover:border-green-500/50' 
-                      : 'text-gray-300 bg-dark-surface hover:bg-dark-surface/80 hover:text-white'"
-                  >
-                    <span>{{ isCompleted(course.id) ? 'View Certificate' : 'View Course' }}</span>
-                    <svg class="ml-2 w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </NuxtLink>
-                </div>
-              </template>
-              <template #fallback>
-                <div class="space-y-2">
-                  <button
-                    type="button"
-                    class="w-full flex justify-center items-center px-6 py-3.5 border border-transparent text-sm font-semibold rounded-xl text-white bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 transition-all transform group-hover:scale-105 shadow-lg group-hover:shadow-xl"
-                  >
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    <span>Enroll</span>
-                  </button>
-                  <NuxtLink
-                    :to="`/courses/${course.id}`"
-                    class="w-full flex justify-center items-center px-6 py-3.5 border border-dark-border text-sm font-semibold rounded-xl transition-all transform group-hover:scale-105 text-gray-300 bg-dark-surface hover:bg-dark-surface/80 hover:text-white"
-                  >
-                    <span>View Course</span>
-                    <svg class="ml-2 w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </NuxtLink>
-                </div>
-              </template>
-            </ClientOnly>
+              <!-- Generate Course Button (always available) -->
+              <NuxtLink
+                to="/generate-course"
+                class="w-full flex justify-center items-center px-6 py-3.5 border border-dark-border text-sm font-semibold rounded-xl text-gray-300 bg-dark-surface hover:bg-dark-surface/80 hover:text-white transition-all transform group-hover:scale-105"
+              >
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Generate Course</span>
+              </NuxtLink>
+            </div>
           </div>
         </div>
       </div>
@@ -374,15 +332,27 @@ const clearFilters = () => {
   filterSubject.value = ''
 }
 
-const handleEnroll = (courseId: string) => {
-  enroll(courseId, 5) // 4 lessons + 1 assessment = 5 total
-  // Redirect to course page after enrollment
-  navigateTo(`/courses/${courseId}`)
+const handleEnroll = async (courseId: string, event?: Event) => {
+  if (event) {
+    event.preventDefault()
+    event.stopPropagation()
+  }
+  
+  // Get course to know total lessons
+  const course = courses.value.find(c => c.id === courseId)
+  const totalLessons = (course?.pages?.length || 4) + 1 // +1 for assessment
+  enroll(courseId, totalLessons)
+  
+  // Redirect to course detail page
+  const router = useRouter()
+  const courseUrl = `/courses/${courseId}`
+  
+  // Use router.push for explicit navigation
+  await router.push(courseUrl)
 }
 
-const handleContinueLearning = async (courseId: string) => {
-  const nextIndex = getNextLessonIndex(courseId)
-  await navigateTo(`/courses/${courseId}/lesson/${nextIndex}`)
+const handleViewCourse = (courseId: string) => {
+  navigateTo(`/courses/${courseId}`)
 }
 
 const formatDate = (dateString: string) => {

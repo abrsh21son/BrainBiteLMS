@@ -177,15 +177,36 @@ Teaching Style Guidelines:
 - Keep the tone motivating and encouraging
 - Make content relatable and practical
 
-Content Guidelines:
+Content Structure Guidelines:
 - Include EXACTLY 4 pages of content
-- Each page should cover a distinct topic or concept
+- Each page must cover a distinct, logically progressive topic that builds upon previous pages
+- Structure the 4 pages as a learning progression:
+  * Page 1: Introduction/Getting Started - Cover basics, overview, and fundamental concepts
+  * Page 2: Core Concepts - Dive into the main components or foundational elements
+  * Page 3: Advanced Topics - Explore more complex features or practical applications
+  * Page 4: Best Practices/Summary - Cover best practices, common patterns, and key takeaways
+- For technical subjects (e.g., Django, React, Python), structure pages by major components:
+  * Example for Django: "Introduction to Django" → "Django Models" → "Django Views" → "Django Templates"
+  * Example for React: "React Basics" → "Components & Props" → "State & Hooks" → "Advanced Patterns"
+- Each page title should be clear and descriptive (e.g., "Django Models", "Understanding State Management")
+- Each page content should be comprehensive (at least 300-500 words) with:
+  * Clear explanations
+  * Practical examples
+  * Code snippets where relevant
+  * Real-world use cases
+  * Visual structure with headings and subheadings
+
+Assessment Guidelines:
 - Include EXACTLY 2 assessment questions
 - Each question must have exactly 3-4 options with exactly one correct answer (is_correct: true)
-- Use proper markdown formatting in page content
-- Ensure content is accurate and educational
+- Questions should test understanding of key concepts from across all 4 pages
 - Use boolean true/false (not strings) for is_correct
 - Ensure all strings are properly escaped for JSON
+
+Formatting:
+- Use proper markdown formatting in page content (headings, lists, code blocks, bold, italic)
+- Ensure content is accurate and educational
+- Make content engaging and easy to follow
 
 Return ONLY the JSON object, nothing else.`;
   }

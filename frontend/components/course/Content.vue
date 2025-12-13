@@ -1,5 +1,5 @@
 <template>
-  <div v-if="page" class="course-content">
+  <div v-if="page && page.title" class="course-content">
     <!-- Enhanced Lesson Header -->
     <div class="bg-gradient-to-r from-green-500/10 via-transparent to-transparent border-b border-dark-border p-8">
       <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
@@ -137,7 +137,10 @@ const parseMarkdown = (text: string): string => {
 }
 
 const renderedContent = computed(() => {
-  return parseMarkdown(props.page.content_md || '')
+  if (!props.page || !props.page.content_md) {
+    return '<p class="text-gray-400">Content is being loaded...</p>'
+  }
+  return parseMarkdown(props.page.content_md)
 })
 </script>
 
