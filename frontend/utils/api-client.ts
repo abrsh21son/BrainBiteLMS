@@ -11,7 +11,7 @@ export class ApiClient {
     // Use environment variable directly (works in both SSR and client)
     // The runtime config is set from this env var in nuxt.config.ts
     // Using env var directly avoids calling useRuntimeConfig outside setup context
-    const baseURL = process.env.NUXT_PUBLIC_BACKEND_URL || 'http://localhost:3000';
+    const baseURL = process.env.NUXT_PUBLIC_BACKEND_URL || 'https://brainbitelms-backend.onrender.com';
     
     this._baseURL = baseURL;
     return baseURL;
@@ -141,8 +141,15 @@ export class ApiClient {
     // Network errors
     if (error.message) {
       // Check if it's a network error
-      if (error.message.includes('fetch') || error.message.includes('network')) {
-        return new Error('Network error: Could not connect to the server. Please check if the backend is running.');
+      if (error.message.includes('fetch') || error.message.includes('network') || error.message.includes('ECONNREFUSED') || error.message.includes('Failed to fetch')) {
+        const backendUrl = this.getBaseURL();
+        return new Error(
+          `Network error: Could not connect to the backend server at ${backendUrl}.\n\n` +
+          `Please ensure:\n` +
+          `1. The backend is running (cd backend && npm run start:dev)\n` +
+          `2. The backend URL is correct in your .env file (NUXT_PUBLIC_BACKEND_URL)\n` +
+          `3. Required environment variables are set in backend/.env (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, AI_API_KEY)`
+        );
       }
       return new Error(error.message);
     }

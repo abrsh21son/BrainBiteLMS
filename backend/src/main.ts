@@ -16,7 +16,7 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
 
   // CORS configuration
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+  const frontendUrl = process.env.FRONTEND_URL || 'https://brain-bite-lms.vercel.app';
   // Allow multiple origins (comma-separated) or single origin
   const allowedOrigins = frontendUrl.includes(',') 
     ? frontendUrl.split(',').map(url => url.trim())

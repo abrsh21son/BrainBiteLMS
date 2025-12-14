@@ -33,7 +33,7 @@ export default defineNuxtConfig({
   
   runtimeConfig: {
     public: {
-      backendUrl: process.env.NUXT_PUBLIC_BACKEND_URL || 'http://localhost:3000',
+      backendUrl: process.env.NUXT_PUBLIC_BACKEND_URL || 'https://brainbitelms-backend.onrender.com',
       supabaseUrl: process.env.NUXT_PUBLIC_SUPABASE_URL,
       supabaseAnonKey: process.env.NUXT_PUBLIC_SUPABASE_ANON_KEY,
     },
