@@ -21,6 +21,11 @@ export class ApiClient {
     // Ensure base URL doesn't end with a slash
     baseURL = baseURL.replace(/\/$/, '');
     
+    // Log in development to help debug
+    if (process.dev) {
+      console.log('API Base URL:', baseURL);
+    }
+    
     this._baseURL = baseURL;
     return baseURL;
   }
@@ -34,10 +39,16 @@ export class ApiClient {
       // Only get session on client-side
       if (process.client) {
         const supabase = useSupabaseClient();
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.warn('Failed to get session:', sessionError);
+        }
         
         if (session?.access_token) {
           headers.Authorization = `Bearer ${session.access_token}`;
+        } else if (process.dev) {
+          console.warn('No access token available for API request');
         }
       }
     } catch (error) {
@@ -49,9 +60,10 @@ export class ApiClient {
 
   async get<T>(url: string, options?: RequestInit): Promise<T> {
     const headers = await this.getAuthHeaders();
+    const fullUrl = `${this.getBaseURL()}${url}`;
     
     try {
-      const response = await $fetch<ApiResponse<T>>(`${this.getBaseURL()}${url}`, {
+      const response = await $fetch<ApiResponse<T>>(fullUrl, {
         ...options,
         method: 'GET',
         headers: {
@@ -62,6 +74,19 @@ export class ApiClient {
 
       return this.extractData(response);
     } catch (error: any) {
+      // Log error details for debugging (only in development)
+      if (process.dev) {
+        console.error('API Error Details:', {
+          url: fullUrl,
+          error,
+          status: error.status || error.statusCode,
+          message: error.message,
+          data: error.data,
+          response: error.response,
+          name: error.name,
+          cause: error.cause,
+        });
+      }
       throw this.handleError(error);
     }
   }
@@ -139,9 +164,10 @@ export class ApiClient {
   }
 
   private handleError(error: any): Error {
-    // Check for HTTP status codes first
-    const statusCode = error.statusCode || error.status || error.response?.status;
+    // Check for HTTP status codes first (Nuxt $fetch uses status or statusCode)
+    const statusCode = error.status || error.statusCode || error.response?.status || error.response?.statusCode;
     
+    // Handle HTTP status codes
     if (statusCode === 401) {
       return new Error('Unauthorized: Please log in to access this resource.');
     }
@@ -154,11 +180,24 @@ export class ApiClient {
       return new Error('Not Found: The requested resource could not be found.');
     }
     
-    // Nuxt $fetch error structure
+    // Check for CORS errors specifically
+    if (error.message?.includes('CORS') || error.message?.includes('Cross-Origin')) {
+      const backendUrl = this.getBaseURL();
+      return new Error(
+        `CORS Error: The backend server at ${backendUrl} is not allowing requests from this origin.\n\n` +
+        `This is a backend configuration issue. The backend needs to allow requests from your frontend domain.`
+      );
+    }
+    
+    // Nuxt $fetch error structure - check error.data first
     if (error.data) {
       const apiError = error.data as ApiErrorResponse;
       if (apiError.message) {
         return new Error(apiError.message);
+      }
+      // If data exists but no message, it might be a direct error response
+      if (typeof error.data === 'string') {
+        return new Error(error.data);
       }
     }
     
@@ -170,29 +209,51 @@ export class ApiClient {
       }
     }
     
-    // Network errors (only if no status code and network-related message)
-    if (error.message) {
-      const isNetworkError = 
-        error.message.includes('fetch') || 
-        error.message.includes('network') || 
-        error.message.includes('ECONNREFUSED') || 
-        error.message.includes('Failed to fetch') ||
-        error.message.includes('ERR_NETWORK') ||
-        error.code === 'ECONNREFUSED' ||
-        error.code === 'ETIMEDOUT';
+    // Check error name for FetchError or network-related errors
+    const isFetchError = error.name === 'FetchError' || error.name === 'TypeError';
+    const errorMessage = error.message || '';
+    
+    // Network errors (only if no status code and network-related indicators)
+    const isNetworkError = 
+      isFetchError ||
+      errorMessage.includes('fetch') || 
+      errorMessage.includes('network') || 
+      errorMessage.includes('ECONNREFUSED') || 
+      errorMessage.includes('Failed to fetch') ||
+      errorMessage.includes('ERR_NETWORK') ||
+      errorMessage.includes('ERR_INTERNET_DISCONNECTED') ||
+      errorMessage.includes('NetworkError') ||
+      error.code === 'ECONNREFUSED' ||
+      error.code === 'ETIMEDOUT' ||
+      error.code === 'ENOTFOUND';
+    
+    // Only treat as network error if there's no HTTP status code
+    if (isNetworkError && !statusCode) {
+      const backendUrl = this.getBaseURL();
+      const currentOrigin = process.client ? window.location.origin : 'unknown';
       
-      if (isNetworkError && !statusCode) {
-        const backendUrl = this.getBaseURL();
-        return new Error(
-          `Network error: Could not connect to the backend server at ${backendUrl}.\n\n` +
-          `Please ensure:\n` +
-          `1. The backend is running (cd backend && npm run start:dev)\n` +
-          `2. The backend URL is correct in your .env file (NUXT_PUBLIC_BACKEND_URL)\n` +
-          `3. Required environment variables are set in backend/.env (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, AI_API_KEY)`
-        );
-      }
-      
-      return new Error(error.message);
+      return new Error(
+        `Network error: Could not connect to the backend server at ${backendUrl}.\n\n` +
+        `Current frontend origin: ${currentOrigin}\n\n` +
+        `Possible causes:\n` +
+        `1. CORS issue: Backend may not allow requests from ${currentOrigin}\n` +
+        `   → Update backend FRONTEND_URL env var to include this origin\n` +
+        `2. Backend server is down or unreachable\n` +
+        `3. Missing NUXT_PUBLIC_BACKEND_URL environment variable in Vercel\n` +
+        `   → Set it in Vercel project settings → Environment Variables\n` +
+        `4. Network connectivity problem\n\n` +
+        `Check browser DevTools → Network tab for detailed error information.`
+      );
+    }
+    
+    // If we have a status code but no specific message, provide a generic one
+    if (statusCode) {
+      return new Error(`Request failed with status ${statusCode}: ${errorMessage || 'Unknown error'}`);
+    }
+    
+    // Return the error message if available
+    if (errorMessage) {
+      return new Error(errorMessage);
     }
     
     return new Error('An unexpected error occurred');
