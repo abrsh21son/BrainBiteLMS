@@ -11,7 +11,7 @@ export class ApiClient {
     // Use environment variable directly (works in both SSR and client)
     // The runtime config is set from this env var in nuxt.config.ts
     // Using env var directly avoids calling useRuntimeConfig outside setup context
-    const baseURL = process.env.NUXT_PUBLIC_BACKEND_URL || 'https://brainbitelms-backend.onrender.com';
+    const baseURL = process.env.NUXT_PUBLIC_BACKEND_URL || 'https://brainbitelms-backend.onrender.com/api';
     
     this._baseURL = baseURL;
     return baseURL;
