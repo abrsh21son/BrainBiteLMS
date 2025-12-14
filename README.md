@@ -452,7 +452,6 @@ Private repository - All rights reserved
 
 ## 📞 Support
 
-For deployment help, see [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)
 
 For issues or questions:
 - Check the troubleshooting section above
