@@ -7,7 +7,6 @@ import { AppService } from './app.service';
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-  // This route is at /api due to global prefix
   @Get()
   @ApiOperation({ summary: 'Get API information' })
   @ApiResponse({ status: 200, description: 'API information' })

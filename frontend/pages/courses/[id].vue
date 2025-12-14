@@ -156,23 +156,19 @@ const { currentCourse, loading, error, fetchCourseById } = useCourses()
 const courseId = route.params.id as string
 const activeTab = ref<string>('page-0')
 
-// Fetch course data
 try {
   await fetchCourseById(courseId)
 } catch (e) {
-  // Error is handled by the composable
 }
 
 const course = computed(() => currentCourse.value)
 const pending = computed(() => loading.value)
 
-// Sort pages by page_index
 const sortedPages = computed(() => {
   if (!course.value?.pages) return []
   return [...course.value.pages].sort((a, b) => a.page_index - b.page_index)
 })
 
-// Set default tab to first page
 watch(sortedPages, (pages) => {
   if (pages.length > 0 && activeTab.value === 'page-0') {
     activeTab.value = 'page-0'

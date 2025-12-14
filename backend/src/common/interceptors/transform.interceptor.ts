@@ -24,19 +24,16 @@ export class TransformInterceptor<T>
     const request = context.switchToHttp().getRequest();
     const { url } = request;
 
-    // Skip transformation for Swagger/docs endpoints
     if (url?.includes('/api/docs') || url?.includes('/api-json')) {
       return next.handle();
     }
 
     return next.handle().pipe(
       map((data) => {
-        // If data is already in the correct format, return as-is
         if (data && typeof data === 'object' && 'success' in data) {
           return data as Response<T>;
         }
         
-        // Otherwise wrap it
         return {
           success: true,
           data,

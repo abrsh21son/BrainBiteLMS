@@ -8,5 +8,4 @@
 </template>
 
 <script setup lang="ts">
-// Layout for authenticated pages
 </script>

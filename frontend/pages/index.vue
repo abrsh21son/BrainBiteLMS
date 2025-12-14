@@ -836,10 +836,8 @@ definePageMeta({
 const { courses, loading: coursesLoading, fetchCourses } = useCourses()
 const { navigateToCourse } = useCourseNavigation()
 
-// Fetch courses on page load (no auth required for listing)
 await fetchCourses()
 
-// Show latest 3 courses as featured (sorted by created_at DESC)
 const featuredCourses = computed(() => {
   const sorted = [...courses.value].sort((a, b) => {
     const dateA = new Date(a.created_at).getTime()
@@ -871,13 +869,10 @@ const imageLoaded = ref(false)
 
 const handleImageError = (event: Event) => {
   const img = event.target as HTMLImageElement
-  console.error('❌ Image failed to load from:', img.src)
-  console.error('💡 Make sure student.png exists in frontend/public/ folder')
   img.style.display = 'none'
   imageLoaded.value = false
 }
 
-// Smooth scroll to section
 const scrollToSection = (sectionId: string) => {
   const element = document.getElementById(sectionId)
   if (element) {
@@ -885,24 +880,16 @@ const scrollToSection = (sectionId: string) => {
   }
 }
 
-// Intersection Observer for scroll animations
 onMounted(() => {
-  // Check if image exists
   const img = new Image()
   img.onload = () => {
-    console.log('✅ Student image verified and ready')
     imageLoaded.value = true
   }
   img.onerror = () => {
-    console.error('❌ Student image not found at /student.png')
-    console.error('💡 Please check:')
-    console.error('   1. File exists at: frontend/public/student.png')
-    console.error('   2. Restart dev server: npm run dev')
-    console.error('   3. Check browser console for 404 errors')
+    imageLoaded.value = false
   }
   img.src = '/student.png'
 
-  // Add scroll-triggered animations
   const observerOptions = {
     threshold: 0.1,
     rootMargin: '0px 0px -50px 0px'
@@ -917,7 +904,6 @@ onMounted(() => {
     })
   }, observerOptions)
 
-  // Observe all sections except hero
   document.querySelectorAll('section:not(:first-child)').forEach((section) => {
     section.classList.add('opacity-0')
     observer.observe(section)

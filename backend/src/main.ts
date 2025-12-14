@@ -12,27 +12,21 @@ async function bootstrap() {
   const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule);
 
-  // Global prefix - all routes will be prefixed with /api
   app.setGlobalPrefix('api');
 
-  // CORS configuration
-  const frontendUrl = process.env.FRONTEND_URL || 'https://brain-bite-lms.vercel.app';
-  // Allow multiple origins (comma-separated) or single origin
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
   const allowedOrigins = frontendUrl.includes(',') 
     ? frontendUrl.split(',').map(url => url.trim())
     : [frontendUrl];
   
   app.enableCors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps, Postman, or curl requests)
       if (!origin) {
         return callback(null, true);
       }
-      // Check if origin is in allowed list
       if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
         return callback(null, true);
       }
-      // For development, allow all origins; restrict in production
       if (process.env.NODE_ENV !== 'production') {
         return callback(null, true);
       }
@@ -45,16 +39,10 @@ async function bootstrap() {
   });
   logger.log(`CORS enabled for origin(s): ${frontendUrl}`);
 
-  // Global validation pipe
   app.useGlobalPipes(new CustomValidationPipe());
-
-  // Global exception filter
   app.useGlobalFilters(new AllExceptionsFilter());
-
-  // Global interceptors
   app.useGlobalInterceptors(new LoggingInterceptor(), new TransformInterceptor());
 
-  // Swagger/OpenAPI documentation
   const config = new DocumentBuilder()
     .setTitle('BrainBite API')
     .setDescription('AI-Powered Learning Management System API')
@@ -79,7 +67,6 @@ async function bootstrap() {
     },
   });
 
-  // Handle root route and favicon using Express directly
   const httpAdapter = app.getHttpAdapter();
   httpAdapter.get('/', (req: Request, res: Response) => {
     res.json({
@@ -96,7 +83,6 @@ async function bootstrap() {
     });
   });
   
-  // Handle favicon requests
   httpAdapter.get('/favicon.ico', (req: Request, res: Response) => {
     res.status(204).send();
   });
@@ -104,7 +90,6 @@ async function bootstrap() {
   const port = process.env.PORT || 3000;
   await app.listen(port);
 
-  // Get the actual URL (Render provides RENDER_EXTERNAL_URL)
   const baseUrl = process.env.RENDER_EXTERNAL_URL || 
                   process.env.RAILWAY_PUBLIC_DOMAIN || 
                   `http://localhost:${port}`;

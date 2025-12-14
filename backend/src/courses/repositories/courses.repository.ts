@@ -108,7 +108,6 @@ export class CoursesRepository {
       throw new Error(`Failed to fetch question options: ${optionsError.message}`);
     }
 
-    // Map options to questions
     const questionsWithOptions: QuestionWithOptions[] = questions.map((question) => ({
       ...question,
       options: (options || []).filter((opt) => opt.question_id === question.id),

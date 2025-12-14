@@ -45,10 +45,7 @@ export class CoursesService {
     try {
       this.logger.log(`Generating course for subject: ${dto.subject}, level: ${dto.level || 'default'}, ageRange: ${dto.ageRange || 'default'}, language: ${dto.language || 'default'}`);
 
-      // 1. Generate content via AI
       const aiContent = await this.aiService.generateCourseContent(dto.subject, dto.level, dto.ageRange, dto.language);
-
-      // 2. Create Course in DB
       const course = await this.coursesRepository.createCourse({
         title: aiContent.title,
         subject: dto.subject,
@@ -60,7 +57,6 @@ export class CoursesService {
       const courseId = course.id;
       this.logger.log(`Created course ${courseId}, now creating pages and questions`);
 
-      // 3. Create Pages
       const pagesToInsert = aiContent.pages.map((page, index) => ({
         course_id: courseId,
         page_index: index,
@@ -71,7 +67,6 @@ export class CoursesService {
       await this.coursesRepository.createPages(pagesToInsert);
       this.logger.log(`Created ${pagesToInsert.length} pages for course ${courseId}`);
 
-      // 4. Create Questions & Options
       const questionPromises = aiContent.questions.map(async (question) => {
         try {
           const questionEntity = await this.coursesRepository.createQuestion({
@@ -89,7 +84,6 @@ export class CoursesService {
           await this.coursesRepository.createQuestionOptions(optionsToInsert);
         } catch (error) {
           this.logger.warn(`Failed to create question: ${error.message}`, error.stack);
-          // Continue with other questions instead of failing the entire operation
         }
       });
 
@@ -131,10 +125,9 @@ export class CoursesService {
     }
   }
 
-  async explainAnswer(question: string, correctAnswer: string, userAnswer: string, isCorrect: boolean): Promise<{ explanation: string }> {
+  async explainAnswer(question: string, correctAnswer: string, userAnswer: string, isCorrect: boolean): Promise<{ explanation: string; suggestions: string[] }> {
     try {
-      const explanation = await this.aiService.generateAnswerExplanation(question, correctAnswer, userAnswer, isCorrect);
-      return { explanation };
+      return await this.aiService.generateAnswerExplanation(question, correctAnswer, userAnswer, isCorrect);
     } catch (error) {
       this.logger.error(`Failed to generate explanation: ${error.message}`, error.stack);
       throw new InternalServerErrorException('Failed to generate explanation');

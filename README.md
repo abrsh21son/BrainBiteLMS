@@ -2,7 +2,148 @@
 
 > A lightweight e-learning MVP that allows users to generate AI-powered courses, browse them, and take interactive assessments.
 
+## 📋 Table of Contents
+
+- [Overview](#overview)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Quick Start](#quick-start)
+- [Setup Instructions](#setup-instructions)
+- [API Documentation](#api-documentation)
+- [Testing](#testing)
+- [Deployment](#deployment)
+- [Architecture](#architecture)
+- [Troubleshooting](#troubleshooting)
+
+## 🎯 Overview
+
+BrainBite is a full-stack e-learning platform built with modern web technologies. It enables users to:
+
+- **Authenticate** using Supabase Auth (email/password)
+- **Browse** published courses with search and filtering
+- **Generate** new courses using AI (Groq API)
+- **Learn** through interactive lessons with 4 content pages
+- **Assess** knowledge with MCQ questions and instant feedback
+- **Listen** to course content using Text-to-Speech (TTS)
+
+## ✨ Features
+
+### Core Functionality
+
+- ✅ **User Authentication** - Sign up, log in, and password reset using Supabase Auth
+- ✅ **Course Browsing** - View all published courses with search and filtering
+- ✅ **AI Course Generation** - Generate complete courses with 4 lessons and 2 MCQ questions using Groq AI
+- ✅ **Interactive Learning** - Navigate through lessons with elegant UI and progress tracking
+- ✅ **Assessment System** - Take quizzes with instant feedback and AI-generated explanations
+- ✅ **Text-to-Speech** - Listen to course content with voice style variations
+- ✅ **AI Learning Assistant** - Ask questions about lessons and get AI-powered answers
+- ✅ **Course Recommendations** - Get personalized course suggestions after completing assessments
+
+### User Flows
+
+1. **Authentication Flow**
+   - User signs up/logs in via `/login` page
+   - Session persists across page refreshes
+   - Protected routes redirect unauthenticated users to login
+
+2. **Course Browsing Flow**
+   - User views all published courses on `/courses` page
+   - Can search and filter by subject
+   - Clicks "Learn" to view course details
+
+3. **Course Generation Flow**
+   - User navigates to `/generate-course`
+   - Enters subject (and optional: level, age range, language)
+   - AI generates course content
+   - User is redirected to the new course details page
+
+4. **Learning Flow**
+   - User views course with 4 content pages (tabs/accordion)
+   - Can navigate between pages
+   - Completes assessment with 2 MCQ questions
+   - Receives instant feedback and score
+
+## 🛠️ Tech Stack
+
+### Frontend
+- **Framework:** Nuxt 3 (Vue.js)
+- **Styling:** Tailwind CSS
+- **Authentication:** Supabase Client
+- **State Management:** Vue Composables
+- **Language:** TypeScript
+
+### Backend
+- **Framework:** NestJS
+- **Database:** Supabase (PostgreSQL)
+- **AI:** Groq API (OpenAI-compatible)
+- **Validation:** class-validator, class-transformer
+- **Language:** TypeScript
+
+### Infrastructure
+- **Database:** Supabase (PostgreSQL with Row Level Security)
+- **Frontend Deployment:** Vercel
+- **Backend Deployment:** Render
+- **Source Control:** GitHub (Private Repository)
+
+## 📁 Project Structure
+
+```
+BrainBite/
+├── frontend/                    # Nuxt 3 application
+│   ├── pages/                  # Route pages
+│   │   ├── index.vue          # Landing page
+│   │   ├── login.vue          # Login page
+│   │   ├── signup.vue         # Signup page
+│   │   ├── courses/           # Course pages
+│   │   │   ├── index.vue     # Courses overview
+│   │   │   └── [id].vue      # Course details
+│   │   └── generate-course.vue # Course generation
+│   ├── components/            # Vue components
+│   │   ├── common/           # Reusable components
+│   │   └── course/           # Course-specific components
+│   ├── composables/          # Reusable composables
+│   ├── layouts/              # Layout templates
+│   ├── middleware/           # Route middleware (auth)
+│   ├── utils/                # Utility functions
+│   └── types/                # TypeScript types
+│
+├── backend/                    # NestJS application
+│   ├── src/
+│   │   ├── courses/          # Course module
+│   │   │   ├── courses.controller.ts
+│   │   │   ├── courses.service.ts
+│   │   │   ├── dto/         # Data Transfer Objects
+│   │   │   ├── entities/    # Type-safe entities
+│   │   │   └── repositories/ # Repository pattern
+│   │   ├── ai/              # AI service
+│   │   │   └── ai.service.ts
+│   │   ├── supabase/        # Supabase integration
+│   │   ├── common/          # Shared utilities
+│   │   │   ├── guards/      # Auth guards
+│   │   │   ├── filters/     # Exception filters
+│   │   │   ├── interceptors/ # Request/response interceptors
+│   │   │   └── pipes/       # Validation pipes
+│   │   └── main.ts          # Application entry point
+│   ├── test/                # Test files
+│   │   ├── e2e/            # End-to-end tests (Playwright)
+│   │   └── playwright.config.ts
+│   └── schema.sql           # Database schema
+│
+├── DEPLOYMENT_GUIDE.md       # Deployment instructions
+└── README.md                 # This file
+```
+
 ## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js (v18 or higher)
+- npm or yarn
+- Supabase Account ([supabase.com](https://supabase.com))
+- Groq API Key ([console.groq.com](https://console.groq.com)) - Free tier available
+
+### Installation
 
 ```bash
 # Clone repository
@@ -22,93 +163,13 @@ cp .env.example .env  # Configure your environment variables
 npm run dev
 ```
 
-Visit:
-- Frontend: `http://localhost:3001`
-- Backend API: `http://localhost:3000/api`
-- API Docs: `http://localhost:3000/api/docs`
+### Access Points
 
-## ✨ Features
-
-- ✅ **User Authentication** - Sign up, log in, and password reset using Supabase Auth
-- ✅ **AI Course Generation** - Generate complete courses with 4 lessons and 2 MCQ questions using Groq AI
-- ✅ **Course Browsing** - View all published courses with search and filtering
-- ✅ **Interactive Learning** - Navigate through lessons with elegant UI and progress tracking
-- ✅ **Assessment System** - Take quizzes with instant feedback and AI-generated explanations
-- ✅ **Text-to-Speech** - Listen to course content with voice style variations
-- ✅ **AI Learning Assistant** - Ask questions about lessons and get AI-powered answers
-- ✅ **Course Recommendations** - Get personalized course suggestions after completing assessments
-
-## 🛠️ Tech Stack
-
-### Frontend
-- **Framework:** Nuxt 3 (Vue.js)
-- **Styling:** Tailwind CSS
-- **Authentication:** Supabase Client
-- **Language:** TypeScript
-
-### Backend
-- **Framework:** NestJS
-- **Database:** Supabase (PostgreSQL)
-- **AI:** Groq API (OpenAI-compatible)
-- **Language:** TypeScript
-
-### Infrastructure
-- **Database:** Supabase (PostgreSQL with Row Level Security)
-- **Deployment:** 
-  - Frontend: Vercel
-  - Backend: Render
-
-## 📁 Project Structure
-
-```
-BrainBite/
-├── frontend/                 # Nuxt 3 application
-│   ├── pages/               # Route pages
-│   │   ├── index.vue        # Landing page
-│   │   ├── login.vue         # Login page
-│   │   ├── signup.vue       # Signup page
-│   │   ├── courses/         # Course pages
-│   │   └── generate-course.vue
-│   ├── components/          # Vue components
-│   │   ├── common/          # Reusable components
-│   │   └── course/          # Course-specific components
-│   ├── composables/         # Reusable composables
-│   ├── layouts/             # Layout templates
-│   ├── middleware/          # Route middleware
-│   ├── utils/               # Utility functions
-│   └── types/               # TypeScript types
-│
-├── backend/                 # NestJS application
-│   ├── src/
-│   │   ├── courses/         # Course module
-│   │   │   ├── courses.controller.ts
-│   │   │   ├── courses.service.ts
-│   │   │   ├── dto/         # Data Transfer Objects
-│   │   │   ├── entities/   # Type-safe entities
-│   │   │   └── repositories/ # Repository pattern
-│   │   ├── ai/              # AI service
-│   │   │   └── ai.service.ts
-│   │   ├── supabase/        # Supabase integration
-│   │   ├── common/          # Shared utilities
-│   │   │   ├── guards/      # Auth guards
-│   │   │   ├── filters/     # Exception filters
-│   │   │   ├── interceptors/ # Request/response interceptors
-│   │   │   └── pipes/       # Validation pipes
-│   │   └── main.ts          # Application entry point
-│   └── schema.sql           # Database schema
-│
-├── DEPLOYMENT_GUIDE.md      # Complete deployment instructions
-└── README.md                # This file
-```
+- **Frontend:** `http://localhost:3001`
+- **Backend API:** `http://localhost:3000/api`
+- **API Docs:** `http://localhost:3000/api/docs`
 
 ## 🔧 Setup Instructions
-
-### Prerequisites
-
-- Node.js (v18 or higher)
-- npm or yarn
-- Supabase Account ([supabase.com](https://supabase.com))
-- Groq API Key ([console.groq.com](https://console.groq.com)) - Free tier available
 
 ### 1. Database Setup (Supabase)
 
@@ -154,16 +215,15 @@ NUXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
 
 # Backend API URL (no /api suffix - API client adds it automatically)
 # For local: http://localhost:3000
-# For production: https://brainbitelms-backend.onrender.com
+# For production: https://your-backend-url.onrender.com
 NUXT_PUBLIC_BACKEND_URL=http://localhost:3000
 ```
 
 **Important:**
 - Use the **anon** key (public key) for the frontend
 - Backend URL should NOT include `/api` suffix (the API client adds it automatically)
-- For deployed backend, use the full URL without `/api`: `https://brainbitelms-backend.onrender.com`
 
-### 3. Installation & Running
+### 3. Running the Application
 
 #### Backend
 
@@ -188,31 +248,7 @@ npm run dev
 
 Frontend runs on `http://localhost:3001`
 
-## 🚀 Deployment
-
-For complete step-by-step deployment instructions, see **[DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)**
-
-**📋 Frontend Deployment Checklist:** See [FRONTEND_DEPLOYMENT_CHECKLIST.md](./FRONTEND_DEPLOYMENT_CHECKLIST.md) for detailed frontend deployment and troubleshooting steps.
-
-### Quick Overview
-
-**Backend (Render):**
-1. Create Web Service on Render
-2. Connect GitHub repository
-3. Set build command: `cd backend && npm install && npm run build`
-4. Set start command: `cd backend && npm run start:prod`
-5. Add environment variables
-6. Deploy
-
-**Frontend (Vercel):**
-1. Import GitHub repository in Vercel
-2. Set root directory: `frontend`
-3. Add environment variables
-4. Deploy
-
-See [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) for detailed instructions.
-
-## 📚 API Endpoints
+## 📚 API Documentation
 
 ### Public Endpoints
 
@@ -230,6 +266,73 @@ See [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) for detailed instructions.
 **Authentication:** Send JWT token in `Authorization: Bearer <token>` header
 
 **API Documentation:** Visit `/api/docs` when backend is running for interactive Swagger documentation.
+
+## 🧪 Testing
+
+### Backend Tests
+
+```bash
+cd backend
+npm run test           # Run unit tests
+npm run test:watch     # Run tests in watch mode
+npm run test:cov       # Run tests with coverage
+npm run test:e2e       # Run end-to-end tests (Jest)
+npm run test:playwright # Run Playwright E2E tests
+```
+
+### Frontend Tests
+
+Frontend tests can be added using Vitest. Test structure is ready for expansion.
+
+### End-to-End Testing (Playwright)
+
+The project includes Playwright E2E tests covering:
+
+1. **Authentication Flow** (`backend/test/e2e/auth.spec.ts`)
+   - Login page navigation
+   - Sign up link visibility
+   - Protected route redirection
+
+2. **Course Generation Flow** (`backend/test/e2e/course-generation.spec.ts`)
+   - Generate course form display
+   - Course generation and redirect to details page
+
+3. **Assessment Flow** (`backend/test/e2e/assessment.spec.ts`)
+   - Assessment questions display
+   - Answer selection and feedback
+
+**Running E2E Tests:**
+
+```bash
+cd backend
+npm run test:playwright
+```
+
+**Note:** E2E tests require authentication setup. Some tests are skipped by default and require manual authentication configuration.
+
+## 🚀 Deployment
+
+For complete deployment instructions, see **[DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)**
+
+### Frontend (Vercel) - Quick Start
+
+1. Push code to GitHub
+2. Import project in Vercel
+3. Set root directory: `frontend`
+4. Add environment variables:
+   - `NUXT_PUBLIC_BACKEND_URL=https://your-backend-url.onrender.com`
+   - `NUXT_PUBLIC_SUPABASE_URL=your-supabase-url`
+   - `NUXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key`
+5. Deploy!
+
+### Backend (Render) - Quick Overview
+
+1. Create Web Service on Render
+2. Connect GitHub repository
+3. Set build command: `cd backend && npm install && npm run build`
+4. Set start command: `cd backend && npm run start:prod`
+5. Add environment variables
+6. Deploy
 
 ## 🏗️ Architecture
 
@@ -269,51 +372,12 @@ See [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) for detailed instructions.
 ### Database Schema
 
 - **courses** - Main course table with title, subject, description
-- **course_pages** - Content pages/lessons for each course
-- **questions** - MCQ questions for assessments
+- **course_pages** - Content pages/lessons for each course (4 pages per course)
+- **questions** - MCQ questions for assessments (2 questions per course)
 - **question_options** - Answer options with correct answer flags
 - **attempts** - User assessment attempts (optional)
 
 See `backend/schema.sql` for complete schema and RLS policies.
-
-## 🧪 Testing
-
-### Backend Tests
-
-```bash
-cd backend
-npm run test           # Run unit tests
-npm run test:watch     # Run tests in watch mode
-npm run test:cov       # Run tests with coverage
-npm run test:e2e       # Run end-to-end tests (Jest)
-npm run test:playwright # Run Playwright E2E tests
-```
-
-### Frontend Tests
-
-Frontend tests can be added using Vitest. Test structure is ready for expansion.
-
-## 🚨 QUICK FIX: Frontend Not Rendering Courses
-
-**If courses aren't showing, check these 4 things:**
-
-1. **Environment Variable** (Most Common Issue)
-   - Vercel → Settings → Environment Variables
-   - Set `NUXT_PUBLIC_BACKEND_URL=https://brainbitelms-backend.onrender.com`
-   - ⚠️ **NO `/api` suffix!**
-
-2. **Backend CORS**
-   - Render → Environment → Set `FRONTEND_URL` to your Vercel domain
-
-3. **Browser Console**
-   - F12 → Check for API errors or wrong URLs
-   - Should see: `[API Client] GET https://brainbitelms-backend.onrender.com/api/courses`
-
-4. **Backend Status**
-   - Test: `curl https://brainbitelms-backend.onrender.com/api/courses`
-   - Should return: `{"success":true,"data":[...]}`
-
-**📋 Complete deployment checklist:** See [FRONTEND_DEPLOYMENT_CHECKLIST.md](./FRONTEND_DEPLOYMENT_CHECKLIST.md)
 
 ## 🐛 Troubleshooting
 
@@ -324,7 +388,7 @@ Frontend tests can be added using Vitest. Test structure is ready for expansion.
 
 2. **CORS errors**
    - Solution: Verify `FRONTEND_URL` is set correctly in backend `.env`
-   - For deployed backend: Set `FRONTEND_URL` in Render dashboard to your frontend URL (e.g., `https://your-app.vercel.app`)
+   - For deployed backend: Set `FRONTEND_URL` in Render dashboard to your frontend URL
    - Multiple origins: Use comma-separated values: `https://app1.vercel.app,https://app2.vercel.app`
 
 3. **Authentication errors**
@@ -342,127 +406,21 @@ Frontend tests can be added using Vitest. Test structure is ready for expansion.
 
 ### Frontend Not Rendering Courses
 
-If courses are not showing up in the frontend but the backend API works:
-
 1. **Check Browser Console**
    - Open DevTools (F12) → Console tab
    - Look for API errors, CORS errors, or network failures
-   - Check the Network tab to see if requests are being made
 
 2. **Verify Backend URL Configuration**
    - **Local Development:** Set `NUXT_PUBLIC_BACKEND_URL=http://localhost:3000` (no `/api` suffix)
-   - **Production:** Set `NUXT_PUBLIC_BACKEND_URL=https://brainbitelms-backend.onrender.com` (no `/api` suffix)
-   - The API client automatically appends `/api` to the base URL
+   - **Production:** Set `NUXT_PUBLIC_BACKEND_URL=https://your-backend-url.onrender.com` (no `/api` suffix)
 
 3. **Check CORS Configuration**
    - Backend must allow your frontend origin
    - In Render dashboard → Environment Variables → Set `FRONTEND_URL` to your frontend URL
-   - For local dev: `FRONTEND_URL=http://localhost:3001`
-   - For production: `FRONTEND_URL=https://your-frontend.vercel.app`
 
-4. **Verify API Response Format**
-   - Backend should return: `{"success": true, "data": [...], "timestamp": "..."}`
-   - Test backend directly: `curl https://brainbitelms-backend.onrender.com/api/courses`
-   - Should return JSON with `success: true` and `data` array
-
-5. **Check Authentication (if required)**
-   - Course listing (`GET /api/courses`) does NOT require authentication
-   - Course generation (`POST /api/courses/generate`) DOES require authentication
-   - If you see auth errors, check Supabase configuration
-
-6. **Render Free Tier Cold Start**
+4. **Render Free Tier Cold Start**
    - First request after inactivity takes ~50 seconds
    - Wait for backend to wake up, then try again
-   - Consider upgrading to paid plan to avoid cold starts
-
-### Manual Fixes
-
-#### Fix 1: Update Frontend Environment Variable
-
-```bash
-# In frontend/.env or Vercel environment variables
-NUXT_PUBLIC_BACKEND_URL=https://brainbitelms-backend.onrender.com
-```
-
-**Important:** Do NOT include `/api` in the URL. The API client adds it automatically.
-
-#### Fix 2: Update Backend CORS Configuration
-
-In Render dashboard → Your Backend Service → Environment:
-```
-FRONTEND_URL=https://your-frontend-domain.vercel.app
-```
-
-For multiple origins (local + production):
-```
-FRONTEND_URL=http://localhost:3001,https://your-frontend-domain.vercel.app
-```
-
-#### Fix 3: Test Backend API Directly
-
-```bash
-# Test root endpoint
-curl https://brainbitelms-backend.onrender.com/
-
-# Test courses endpoint
-curl https://brainbitelms-backend.onrender.com/api/courses
-
-# Should return:
-# {"success":true,"data":[...],"timestamp":"..."}
-```
-
-#### Fix 4: Clear Browser Cache and Hard Refresh
-
-- Chrome/Edge: `Ctrl+Shift+R` (Windows) or `Cmd+Shift+R` (Mac)
-- Firefox: `Ctrl+F5` (Windows) or `Cmd+Shift+R` (Mac)
-- Safari: `Cmd+Option+R` (Mac)
-
-#### Fix 5: Check Network Tab in Browser DevTools
-
-1. Open DevTools (F12) → Network tab
-2. Reload the page
-3. Look for requests to `/api/courses`
-4. Check:
-   - Status code (should be 200)
-   - Response body (should have `success: true` and `data` array)
-   - Request URL (should be correct backend URL)
-   - CORS headers (should allow your origin)
-
-#### Fix 6: Verify API Client Base URL
-
-The API client automatically handles the base URL. It will:
-- Use `NUXT_PUBLIC_BACKEND_URL` from environment
-- Append `/api` if not already present
-- Default to `https://brainbitelms-backend.onrender.com/api` if not set
-
-Check browser console for: `[API Client] GET https://brainbitelms-backend.onrender.com/api/courses`
-
-### Still Not Working?
-
-1. **Check Backend Logs**
-   - Render dashboard → Logs tab
-   - Look for errors, CORS issues, or request failures
-
-2. **Check Frontend Logs**
-   - Vercel dashboard → Deployment → Logs
-   - Or local terminal where `npm run dev` is running
-
-3. **Verify Database Connection**
-   - Backend should connect to Supabase successfully
-   - Check Supabase dashboard → Database → Connection pooling
-
-4. **Test with Postman/curl**
-   ```bash
-   # Test courses endpoint
-   curl -X GET https://brainbitelms-backend.onrender.com/api/courses \
-     -H "Content-Type: application/json"
-   
-   # Should return courses array
-   ```
-
-5. **Check Supabase RLS Policies**
-   - Ensure `courses` table has proper RLS policies
-   - Run `backend/schema.sql` if tables are missing
 
 ## 📖 Development Guidelines
 

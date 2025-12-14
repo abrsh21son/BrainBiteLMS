@@ -1,4 +1,3 @@
-// Course Levels
 export const COURSE_LEVELS = [
   { value: 'beginner', label: 'Beginner' },
   { value: 'intermediate', label: 'Intermediate' },
@@ -7,7 +6,6 @@ export const COURSE_LEVELS = [
 
 export type CourseLevel = typeof COURSE_LEVELS[number]['value'];
 
-// Validation Rules
 export const VALIDATION_RULES = {
   subject: {
     minLength: 3,
@@ -29,8 +27,6 @@ export const ROUTES = {
   WELCOME: '/welcome',
 } as const;
 
-// API Endpoints
-// Note: These endpoints are appended to the base URL which already includes /api
 export const API_ENDPOINTS = {
   COURSES: '/courses',
   COURSE_BY_ID: (id: string) => `/courses/${id}`,
@@ -38,7 +34,6 @@ export const API_ENDPOINTS = {
   HEALTH: '/health',
 } as const;
 
-// UI Constants
 export const UI = {
   DEBOUNCE_DELAY: 300,
   TOAST_DURATION: 5000,

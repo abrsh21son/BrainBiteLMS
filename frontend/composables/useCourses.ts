@@ -13,31 +13,17 @@ export const useCourses = () => {
     error.value = null;
 
     try {
-      console.log('[useCourses] Fetching courses...');
       const result = await coursesService.getAllCourses();
-      console.log('[useCourses] Courses fetched:', {
-        count: Array.isArray(result) ? result.length : 'not an array',
-        type: typeof result,
-        result: result,
-      });
       
-      // Ensure result is an array
       if (Array.isArray(result)) {
         courses.value = result;
-        console.log(`[useCourses] Successfully loaded ${result.length} courses`);
       } else {
-        console.error('[useCourses] Expected array but got:', typeof result, result);
         error.value = 'Invalid response format: expected array of courses';
         courses.value = [];
       }
     } catch (e: any) {
-      console.error('[useCourses] Failed to fetch courses:', {
-        error: e,
-        message: e?.message,
-        stack: e?.stack,
-      });
       error.value = handleApiError(e);
-      courses.value = []; // Clear courses on error
+      courses.value = [];
     } finally {
       loading.value = false;
     }
@@ -50,9 +36,8 @@ export const useCourses = () => {
     try {
       currentCourse.value = await coursesService.getCourseById(id);
     } catch (e: any) {
-      console.error(`Failed to fetch course ${id}:`, e);
       error.value = handleApiError(e);
-      throw e; // Re-throw so pages can handle 404s
+      throw e;
     } finally {
       loading.value = false;
     }

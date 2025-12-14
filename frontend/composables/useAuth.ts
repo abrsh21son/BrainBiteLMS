@@ -44,7 +44,6 @@ export const useAuth = () => {
         throw error;
       }
 
-      // Check for redirect path from course navigation
       const redirectPath = sessionStorage.getItem('redirectAfterLogin');
       if (redirectPath) {
         sessionStorage.removeItem('redirectAfterLogin');
@@ -75,15 +74,12 @@ export const useAuth = () => {
         throw error;
       }
 
-      // If user is automatically confirmed (email confirmation disabled), redirect to login
       if (data.user && data.session) {
-        // Auto-confirmed users should go to login to sign in
         successMsg.value = 'Account created successfully! Redirecting to login...';
         setTimeout(async () => {
           await router.push('/login');
         }, 2000);
       } else {
-        // Success message - user needs to confirm email, then redirect to login
         successMsg.value = 'Success! Please check your email for the confirmation link. You will be redirected to login.';
         setTimeout(async () => {
           await router.push('/login');
@@ -153,7 +149,6 @@ export const useAuth = () => {
       await router.push('/login');
     } catch (error: any) {
       console.error('Logout error:', error);
-      // Even if logout fails, try to redirect
       await router.push('/login');
     }
   };

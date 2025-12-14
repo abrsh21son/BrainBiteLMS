@@ -23,20 +23,16 @@ export const useTTS = () => {
 
     switch (style) {
       case 'excited':
-        // Higher pitch, faster rate
         return voices.find(v => v.name.includes('Female') || v.name.includes('Zira')) || voices[0]
       case 'calm':
-        // Slower, lower pitch
         return voices.find(v => v.name.includes('Male') || v.name.includes('David')) || voices[0]
       case 'child-friendly':
-        // Friendly female voice
         return voices.find(v => 
           v.name.includes('Samantha') || 
           v.name.includes('Female') ||
           v.name.includes('Google')
         ) || voices[0]
       case 'deep':
-        // Deep male voice
         return voices.find(v => 
           v.name.includes('Male') || 
           v.name.includes('David') ||
@@ -65,19 +61,16 @@ export const useTTS = () => {
       return;
     }
 
-    // Cancel any current speaking
     stopSpeaking();
 
     const utterance = new SpeechSynthesisUtterance(text.trim());
     currentVoiceStyle.value = style
 
-    // Set voice based on style
     const selectedVoice = getVoiceForStyle(style)
     if (selectedVoice) {
       utterance.voice = selectedVoice
     }
 
-    // Adjust pitch, rate, and volume based on style
     switch (style) {
       case 'excited':
         utterance.rate = 1.15
@@ -147,19 +140,14 @@ export const useTTS = () => {
     }
   };
 
-  // Load voices when available (some browsers load them asynchronously)
   if (process.client && window.speechSynthesis) {
     window.speechSynthesis.onvoiceschanged = () => {
-      // Voices loaded
     };
   }
 
-  // Load voices when available
   if (process.client && window.speechSynthesis) {
     window.speechSynthesis.onvoiceschanged = () => {
-      // Voices loaded
     }
-    // Also try to load voices immediately
     if (window.speechSynthesis.getVoices().length === 0) {
       setTimeout(() => {
         getVoices()

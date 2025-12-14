@@ -8,30 +8,22 @@ export class ApiClient {
       return this._baseURL;
     }
     
-    // Use runtime config when available (client-side), fallback to env var (SSR-safe)
     let baseURL: string;
     try {
       const config = useRuntimeConfig();
-      baseURL = config.public.backendUrl || process.env.NUXT_PUBLIC_BACKEND_URL || 'https://brainbitelms-backend.onrender.com';
+      baseURL = config.public.backendUrl || process.env.NUXT_PUBLIC_BACKEND_URL || '';
     } catch {
-      // Fallback if useRuntimeConfig is not available (e.g., outside setup context)
-      baseURL = process.env.NUXT_PUBLIC_BACKEND_URL || 'https://brainbitelms-backend.onrender.com';
+      baseURL = process.env.NUXT_PUBLIC_BACKEND_URL || '';
     }
     
-    // Ensure base URL doesn't end with a slash
+    if (!baseURL) {
+      throw new Error('NUXT_PUBLIC_BACKEND_URL environment variable is not set');
+    }
+    
     baseURL = baseURL.replace(/\/$/, '');
     
-    // If baseURL doesn't end with /api, add it
     if (!baseURL.endsWith('/api')) {
       baseURL = `${baseURL}/api`;
-    }
-    
-    // Always log the base URL (helps debug production issues)
-    console.log('[API Client] Base URL configured:', baseURL);
-    
-    // Warn if using default (might indicate missing env var)
-    if (!process.env.NUXT_PUBLIC_BACKEND_URL && !baseURL.includes('localhost')) {
-      console.warn('[API Client] Using default backend URL. Set NUXT_PUBLIC_BACKEND_URL env var if this is incorrect.');
     }
     
     this._baseURL = baseURL;
@@ -44,23 +36,15 @@ export class ApiClient {
     };
 
     try {
-      // Only get session on client-side
       if (process.client) {
         const supabase = useSupabaseClient();
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError) {
-          console.warn('Failed to get session:', sessionError);
-        }
+        const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.access_token) {
           headers.Authorization = `Bearer ${session.access_token}`;
-        } else if (process.dev) {
-          console.warn('No access token available for API request');
         }
       }
     } catch (error) {
-      console.warn('Failed to get auth token:', error);
     }
 
     return headers;
@@ -71,9 +55,6 @@ export class ApiClient {
     const fullUrl = `${this.getBaseURL()}${url}`;
     
     try {
-      // Always log requests (helps debug production issues)
-      console.log(`[API Client] GET ${fullUrl}`);
-      
       const response = await $fetch<ApiResponse<T>>(fullUrl, {
         ...options,
         method: 'GET',
@@ -83,29 +64,8 @@ export class ApiClient {
         },
       });
 
-      console.log(`[API Client] Response from ${fullUrl}:`, {
-        success: response?.success,
-        hasData: !!response?.data,
-        dataType: Array.isArray(response?.data) ? 'array' : typeof response?.data,
-        dataLength: Array.isArray(response?.data) ? response.data.length : 'N/A',
-      });
-
-      const extracted = this.extractData(response);
-      console.log(`[API Client] Extracted data:`, {
-        type: Array.isArray(extracted) ? 'array' : typeof extracted,
-        length: Array.isArray(extracted) ? extracted.length : 'N/A',
-      });
-
-      return extracted;
+      return this.extractData(response);
     } catch (error: any) {
-      // Always log errors (helps debug production issues)
-      console.error('[API Client] Error Details:', {
-        url: fullUrl,
-        status: error.status || error.statusCode,
-        message: error.message,
-        name: error.name,
-        cause: error.cause,
-      });
       throw this.handleError(error);
     }
   }
@@ -115,10 +75,6 @@ export class ApiClient {
     const fullUrl = `${this.getBaseURL()}${url}`;
 
     try {
-      if (process.dev) {
-        console.log(`[API Client] POST ${fullUrl}`, body);
-      }
-      
       const response = await $fetch<ApiResponse<T>>(fullUrl, {
         ...options,
         method: 'POST',
@@ -127,29 +83,11 @@ export class ApiClient {
           ...options?.headers,
         },
         body,
-        // Increase timeout for Render free tier wake-up and course generation (90 seconds)
         timeout: 90000,
       });
 
-      if (process.dev) {
-        console.log(`[API Client] Response from ${fullUrl}:`, response);
-      }
-
       return this.extractData(response);
     } catch (error: any) {
-      // Log error details for debugging (only in development)
-      if (process.dev) {
-        console.error('API Error Details:', {
-          url: fullUrl,
-          error,
-          status: error.status || error.statusCode,
-          message: error.message,
-          data: error.data,
-          response: error.response,
-          name: error.name,
-          cause: error.cause,
-        });
-      }
       throw this.handleError(error);
     }
   }
@@ -204,31 +142,21 @@ export class ApiClient {
   }
 
   private extractData<T>(response: any): T {
-    // Backend returns { success: true, data: T, timestamp: string }
     if (response?.success === true && response?.data !== undefined) {
-      console.log('[API Client] Extracting data from success response');
       return response.data;
     }
-    // Fallback for direct data (without success wrapper)
     if (response?.data !== undefined) {
-      console.log('[API Client] Extracting data from response.data');
       return response.data;
     }
-    // If response is already an array (direct array response)
     if (Array.isArray(response)) {
-      console.log('[API Client] Response is already an array');
       return response as T;
     }
-    // If response is already the data (shouldn't happen with our interceptor)
-    console.warn('[API Client] Unexpected response format, returning as-is:', response);
     return response;
   }
 
   private handleError(error: any): Error {
-    // Check for HTTP status codes first (Nuxt $fetch uses status or statusCode)
     const statusCode = error.status || error.statusCode || error.response?.status || error.response?.statusCode;
     
-    // Handle HTTP status codes
     if (statusCode === 401) {
       return new Error('Unauthorized: Please log in to access this resource.');
     }
@@ -241,7 +169,6 @@ export class ApiClient {
       return new Error('Not Found: The requested resource could not be found.');
     }
     
-    // Check for CORS errors specifically
     if (error.message?.includes('CORS') || error.message?.includes('Cross-Origin')) {
       const backendUrl = this.getBaseURL();
       return new Error(
@@ -250,19 +177,16 @@ export class ApiClient {
       );
     }
     
-    // Nuxt $fetch error structure - check error.data first
     if (error.data) {
       const apiError = error.data as ApiErrorResponse;
       if (apiError.message) {
         return new Error(apiError.message);
       }
-      // If data exists but no message, it might be a direct error response
       if (typeof error.data === 'string') {
         return new Error(error.data);
       }
     }
     
-    // H3/Nitro error structure
     if (error.response?._data) {
       const apiError = error.response._data as ApiErrorResponse;
       if (apiError.message) {
@@ -270,11 +194,9 @@ export class ApiClient {
       }
     }
     
-    // Check error name for FetchError or network-related errors
     const isFetchError = error.name === 'FetchError' || error.name === 'TypeError';
     const errorMessage = error.message || '';
     
-    // Network errors (only if no status code and network-related indicators)
     const isNetworkError = 
       isFetchError ||
       errorMessage.includes('fetch') || 
@@ -288,12 +210,10 @@ export class ApiClient {
       error.code === 'ETIMEDOUT' ||
       error.code === 'ENOTFOUND';
     
-    // Only treat as network error if there's no HTTP status code
     if (isNetworkError && !statusCode) {
       const backendUrl = this.getBaseURL();
       const currentOrigin = process.client ? window.location.origin : 'unknown';
       
-      // Check if this is a Render free tier timeout (backend sleeping)
       const isRenderTimeout = 
         backendUrl.includes('render.com') && 
         (errorMessage.includes('timeout') || errorMessage.includes('aborted') || error.code === 'ETIMEDOUT');
@@ -314,19 +234,20 @@ export class ApiClient {
         `1. Check if backend is running: Visit ${backendUrl.replace('/api', '')} in your browser\n` +
         `2. CORS issue: Verify backend FRONTEND_URL env var includes ${currentOrigin}\n` +
         `   → In Render dashboard: Settings → Environment → FRONTEND_URL\n` +
-        `3. Vercel env var: Ensure NUXT_PUBLIC_BACKEND_URL is set to ${backendUrl}\n` +
+        `   → Set to: ${currentOrigin} (or comma-separated: http://localhost:3001,${currentOrigin})\n` +
+        `3. Vercel env var: Ensure NUXT_PUBLIC_BACKEND_URL is set to ${backendUrl.replace('/api', '')}\n` +
         `   → In Vercel: Settings → Environment Variables\n` +
+        `   → ⚠️ IMPORTANT: Do NOT include /api suffix! API client adds it automatically.\n` +
         `4. Backend sleep: If using Render free tier, first request takes ~50s to wake up\n` +
-        `5. Check browser DevTools → Network tab for detailed error information`
+        `5. Check browser DevTools → Network tab for detailed error information\n` +
+        `6. Test backend directly: curl ${backendUrl}/courses`
       );
     }
     
-    // If we have a status code but no specific message, provide a generic one
     if (statusCode) {
       return new Error(`Request failed with status ${statusCode}: ${errorMessage || 'Unknown error'}`);
     }
     
-    // Return the error message if available
     if (errorMessage) {
       return new Error(errorMessage);
     }
@@ -335,7 +256,6 @@ export class ApiClient {
   }
 }
 
-// Lazy singleton - only create when accessed
 let apiClientInstance: ApiClient | null = null;
 
 export function getApiClient(): ApiClient {
@@ -345,7 +265,6 @@ export function getApiClient(): ApiClient {
   return apiClientInstance;
 }
 
-// Export a Proxy for backward compatibility
 export const apiClient = new Proxy({} as ApiClient, {
   get(_target, prop: string | symbol) {
     const instance = getApiClient();

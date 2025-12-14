@@ -15,7 +15,6 @@ export class AiService {
       throw new Error('AI_API_KEY is not configured. Please set AI_API_KEY in your .env file with a Groq API key (starts with "gsk_").');
     }
 
-    // Validate Groq API key format
     if (!apiKey.startsWith('gsk_')) {
       const keyPreview = apiKey.substring(0, 4) + '...' + apiKey.substring(apiKey.length - 4);
       throw new Error(
@@ -31,12 +30,6 @@ export class AiService {
       baseURL: 'https://api.groq.com/openai/v1',
     });
 
-    // Current Groq models (check https://console.groq.com/docs/models for latest):
-    // - llama-3.1-8b-instant (fast, commonly available)
-    // - llama-3.1-70b-versatile (more capable, if available)
-    // - llama-3.3-70b-versatile (newest, if available)
-    // Using llama-3.1-8b-instant as default (most commonly available)
-    // Can override with AI_MODEL env variable
     this.model = this.configService.get<string>('AI_MODEL') || 'llama-3.1-8b-instant';
     this.logger.log(`Using Groq model: ${this.model}`);
   }
@@ -47,8 +40,6 @@ export class AiService {
 
       this.logger.log(`Generating course content for subject: ${subject}, level: ${level || 'default'}, ageRange: ${ageRange || 'default'}, language: ${language || 'default'}`);
 
-      // Groq models work better without response_format constraint
-      // The prompt itself instructs JSON format
       const completion = await this.openai.chat.completions.create({
         model: this.model,
         messages: [
@@ -81,7 +72,6 @@ export class AiService {
         throw error;
       }
       
-      // Handle API key authentication errors specifically
       if (error?.status === 401 || error?.message?.includes('401') || error?.message?.includes('Incorrect API key')) {
         const helpfulMessage = 
           'Groq API key is incorrect or invalid. ' +
@@ -92,7 +82,6 @@ export class AiService {
         throw new InternalServerErrorException(helpfulMessage);
       }
 
-      // Handle model not found or access denied errors
       if (error?.status === 404 || (error?.status === 400 && error?.message?.includes('does not exist'))) {
         const helpfulMessage = 
           `The Groq model "${this.model}" does not exist or you don't have access to it. ` +
@@ -103,7 +92,6 @@ export class AiService {
         throw new InternalServerErrorException(helpfulMessage);
       }
 
-      // Handle model deprecation errors
       if (error?.status === 400 && error?.message?.includes('decommissioned')) {
         const helpfulMessage = 
           `The Groq model "${this.model}" has been decommissioned. ` +
@@ -114,7 +102,6 @@ export class AiService {
         throw new InternalServerErrorException(helpfulMessage);
       }
 
-      // Handle JSON generation errors from Groq
       if (error?.status === 400 && (error?.message?.includes('Failed to generate JSON') || error?.message?.includes('JSON'))) {
         const helpfulMessage = 
           'Groq failed to generate JSON response. This may be due to model limitations. ' +
@@ -290,26 +277,44 @@ Summary:`;
     }
   }
 
-  async generateAnswerExplanation(question: string, correctAnswer: string, userAnswer: string, isCorrect: boolean): Promise<string> {
+  async generateAnswerExplanation(question: string, correctAnswer: string, userAnswer: string, isCorrect: boolean): Promise<{ explanation: string; suggestions: string[] }> {
     try {
-      const prompt = `The student answered: "${userAnswer}"
-Correct answer: "${correctAnswer}"
-Was the student correct? ${isCorrect ? 'Yes' : 'No'}
+      const prompt = `You are an expert tutor providing detailed feedback on a quiz answer.
 
 Question: ${question}
+Student's Answer: "${userAnswer}"
+Correct Answer: "${correctAnswer}"
+Is the student correct? ${isCorrect ? 'Yes' : 'No'}
 
-Provide a friendly, educational explanation:
-${isCorrect 
-  ? 'Congratulate them and explain why their answer is correct.' 
-  : 'Gently explain why their answer is incorrect and clarify the correct answer with a brief explanation.'}
-Keep it encouraging and educational (2-3 sentences max).`;
+Provide a comprehensive response in JSON format with two fields:
+1. "explanation": A detailed, educational explanation (4-6 sentences) that:
+   ${isCorrect 
+     ? '- Congratulates the student warmly\n     - Explains WHY their answer is correct in detail\n     - Highlights the key concepts they understood\n     - Reinforces their learning with specific examples or connections to the course material'
+     : '- Acknowledges their attempt positively\n     - Clearly explains WHY their answer is incorrect\n     - Provides a detailed explanation of the correct answer\n     - Breaks down the key concepts they should focus on\n     - Uses examples or analogies to help them understand better'}
+   - Uses encouraging, supportive language
+   - Is educational and helps deepen understanding
+
+2. "suggestions": An array of 2-3 specific, actionable suggestions (each as a string) that help the student:
+   ${isCorrect 
+     ? '- Build on this knowledge\n     - Explore related concepts\n     - Apply this understanding in practice'
+     : '- Improve their understanding\n     - Review specific concepts\n     - Practice related topics'}
+
+Return ONLY valid JSON in this format:
+{
+  "explanation": "Your detailed explanation here...",
+  "suggestions": [
+    "Suggestion 1",
+    "Suggestion 2",
+    "Suggestion 3"
+  ]
+}`;
 
       const completion = await this.openai.chat.completions.create({
         model: this.model,
         messages: [
           {
             role: 'system',
-            content: 'You are a friendly tutor providing feedback on quiz answers. Be encouraging and educational.',
+            content: 'You are an expert, friendly tutor who provides detailed, educational feedback. Always respond with valid JSON only.',
           },
           {
             role: 'user',
@@ -317,13 +322,46 @@ Keep it encouraging and educational (2-3 sentences max).`;
           },
         ],
         temperature: 0.7,
-        max_tokens: 200,
+        max_tokens: 600,
       });
 
-      return completion.choices[0]?.message?.content || 'Good attempt! Keep learning.';
+      const content = completion.choices[0]?.message?.content;
+      if (!content) {
+        throw new Error('AI service returned empty response');
+      }
+
+      let cleanedContent = content
+        .replace(/```json\n?/gi, '')
+        .replace(/```\n?/g, '')
+        .trim();
+      
+      const firstBrace = cleanedContent.indexOf('{');
+      const lastBrace = cleanedContent.lastIndexOf('}');
+      
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        cleanedContent = cleanedContent.substring(firstBrace, lastBrace + 1);
+      }
+
+      const parsed = JSON.parse(cleanedContent) as { explanation: string; suggestions: string[] };
+
+      if (!parsed.explanation || !Array.isArray(parsed.suggestions)) {
+        throw new Error('Invalid response structure');
+      }
+
+      return {
+        explanation: parsed.explanation,
+        suggestions: parsed.suggestions.slice(0, 3),
+      };
     } catch (error) {
       this.logger.error(`Failed to generate explanation: ${error.message}`, error.stack);
-      return isCorrect ? 'Correct! Great job!' : 'Not quite right, but keep learning!';
+      return {
+        explanation: isCorrect 
+          ? 'Correct! Great job! You understood this concept well. Keep up the excellent work!' 
+          : 'Not quite right, but that\'s okay! The correct answer is: ' + correctAnswer + '. Review the course material to strengthen your understanding.',
+        suggestions: isCorrect
+          ? ['Continue practicing similar questions', 'Explore related topics to deepen your knowledge']
+          : ['Review the course material on this topic', 'Try similar practice questions to reinforce learning'],
+      };
     }
   }
 
@@ -378,14 +416,11 @@ Format as a simple list, one per line, no numbers or bullets:`;
 
   private parseAndValidateResponse(content: string): AICourseContent {
     try {
-      // Clean up the content - remove markdown code blocks if present
       let cleanedContent = content
         .replace(/```json\n?/gi, '')
         .replace(/```\n?/g, '')
         .trim();
       
-      // Try to extract JSON if there's extra text before/after
-      // Look for first { and last }
       const firstBrace = cleanedContent.indexOf('{');
       const lastBrace = cleanedContent.lastIndexOf('}');
       
@@ -395,22 +430,18 @@ Format as a simple list, one per line, no numbers or bullets:`;
       
       const parsed = JSON.parse(cleanedContent) as AICourseContent;
 
-      // Validate structure
       if (!parsed.title || !parsed.description || !Array.isArray(parsed.pages) || !Array.isArray(parsed.questions)) {
         throw new Error('Invalid response structure: missing required fields');
       }
 
-      // Validate pages - must have exactly 4 pages
       if (parsed.pages.length !== 4) {
         throw new Error(`Course must have exactly 4 pages, but got ${parsed.pages.length}`);
       }
 
-      // Validate questions - must have exactly 2 questions
       if (parsed.questions.length !== 2) {
         throw new Error(`Course must have exactly 2 questions, but got ${parsed.questions.length}`);
       }
 
-      // Validate questions structure
       for (const question of parsed.questions) {
         if (!question.question_text || !Array.isArray(question.options) || question.options.length < 2) {
           throw new Error('Each question must have question_text and at least 2 options');

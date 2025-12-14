@@ -96,7 +96,19 @@
                 <span>Generating explanation...</span>
               </div>
             </div>
-            <p v-else class="text-sm text-gray-300 leading-relaxed">{{ explanations[question.id] || 'Loading explanation...' }}</p>
+            <p v-else class="text-sm text-gray-300 leading-relaxed mb-3">{{ explanations[question.id] || 'Loading explanation...' }}</p>
+            
+            <div v-if="!loadingExplanations[question.id] && suggestions[question.id] && suggestions[question.id].length > 0" class="mt-4 pt-4 border-t border-blue-500/20">
+              <p class="text-xs font-semibold text-blue-400 mb-2 uppercase tracking-wide">💡 Suggestions for Improvement</p>
+              <ul class="space-y-2">
+                <li v-for="(suggestion, idx) in suggestions[question.id]" :key="idx" class="flex items-start text-sm text-gray-300">
+                  <svg class="w-4 h-4 text-blue-400 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                  <span>{{ suggestion }}</span>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
@@ -196,6 +208,7 @@ const props = defineProps<{
 const selectedOptions = ref<Record<string, string>>({})
 const isSubmitted = ref(false)
 const explanations = ref<Record<string, string>>({})
+const suggestions = ref<Record<string, string[]>>({})
 const loadingExplanations = ref<Record<string, boolean>>({})
 const recommendations = ref<string[]>([])
 
@@ -230,13 +243,10 @@ const isCourseCompleted = computed(() => {
 const submitAssessment = async () => {
   isSubmitted.value = true
   
-  // Mark assessment as completed and update enrollment progress
   if (props.courseId) {
-    // Mark course as completed when assessment is submitted
-    markCompleted(props.courseId, 4) // 4 pages + 1 assessment = 5 total
+    markCompleted(props.courseId, 4)
   }
   
-  // Generate explanations for all answered questions
   for (const question of props.questions) {
     const selectedOptionId = selectedOptions.value[question.id]
     if (!selectedOptionId) continue
@@ -249,7 +259,7 @@ const submitAssessment = async () => {
     loadingExplanations.value[question.id] = true
     
     try {
-      const response = await apiClient.post<{ explanation: string }>('/api/courses/explain-answer', {
+      const response = await apiClient.post<{ explanation: string; suggestions: string[] }>('/api/courses/explain-answer', {
         question: question.question_text,
         correctAnswer: correctOption.option_text,
         userAnswer: selectedOption.option_text,
@@ -257,19 +267,22 @@ const submitAssessment = async () => {
       })
       
       explanations.value[question.id] = response.explanation
+      suggestions.value[question.id] = response.suggestions || []
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         console.error('Error generating explanation:', error)
       }
       explanations.value[question.id] = selectedOption.is_correct 
-        ? 'Correct! Great job!' 
-        : 'Not quite right, but keep learning!'
+        ? 'Correct! Great job! You understood this concept well.' 
+        : 'Not quite right. The correct answer is: ' + correctOption.option_text + '. Review the course material to strengthen your understanding.'
+      suggestions.value[question.id] = selectedOption.is_correct
+        ? ['Continue practicing similar questions', 'Explore related topics to deepen your knowledge']
+        : ['Review the course material on this topic', 'Try similar practice questions to reinforce learning']
     } finally {
       loadingExplanations.value[question.id] = false
     }
   }
 
-  // Load recommendations after submission
   await loadRecommendations()
 }
 
@@ -282,7 +295,6 @@ const loadRecommendations = async () => {
     if (process.env.NODE_ENV === 'development') {
       console.error('Error loading recommendations:', error)
     }
-    // Don't show error to user, just don't show recommendations
   }
 }
 

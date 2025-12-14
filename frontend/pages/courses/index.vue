@@ -221,31 +221,19 @@
               </div>
             </div>
 
-            <!-- Action Buttons -->
-            <div class="space-y-2">
-              <!-- Open Course Button -->
+            <!-- Action Button -->
+            <div>
               <button
                 @click="handleViewCourse(course.id)"
                 type="button"
                 class="w-full flex justify-center items-center px-6 py-3.5 border border-transparent text-sm font-semibold rounded-xl text-white bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 transition-all transform group-hover:scale-105 shadow-lg group-hover:shadow-xl"
               >
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span>Open Course</span>
+                <span>Learn</span>
               </button>
-
-              <!-- Generate Course Button (always available) -->
-              <NuxtLink
-                to="/generate-course"
-                class="w-full flex justify-center items-center px-6 py-3.5 border border-dark-border text-sm font-semibold rounded-xl text-gray-300 bg-dark-surface hover:bg-dark-surface/80 hover:text-white transition-all transform group-hover:scale-105"
-              >
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                <span>Generate Course</span>
-              </NuxtLink>
             </div>
           </div>
         </div>
@@ -295,21 +283,14 @@
 <script setup lang="ts">
 definePageMeta({
   layout: 'default',
-  ssr: false, // Disable SSR to prevent auth/session mismatch
-  // Note: Courses listing doesn't require auth, but generation does
+  ssr: false,
 })
 
 const { courses, loading, error, fetchCourses } = useCourses()
 const { enroll, isEnrolled, isCompleted, getProgress, getNextLessonIndex, getStatus } = useEnrollment()
-
-// Get user for enrollment features (but courses can be fetched without auth)
 const user = useSupabaseUser()
-
-// Fetch courses immediately - backend allows GET /api/courses without auth
-// Only course generation requires authentication
 const hasAttemptedFetch = ref(false)
 
-// Fetch courses on mount (no auth required for listing)
 onMounted(async () => {
   if (hasAttemptedFetch.value) return
   
@@ -325,17 +306,14 @@ const pending = computed(() => loading.value)
 const searchQuery = ref('')
 const filterSubject = ref('')
 
-// Get unique subjects for filter
 const uniqueSubjects = computed(() => {
   const subjects = new Set(courses.value.map(c => c.subject).filter(Boolean))
   return Array.from(subjects).sort()
 })
 
-// Filter courses based on search and subject
 const filteredCourses = computed(() => {
   let result = courses.value
 
-  // Filter by search query
   if (searchQuery.value.trim()) {
     const query = searchQuery.value.toLowerCase().trim()
     result = result.filter(course => 
@@ -345,7 +323,6 @@ const filteredCourses = computed(() => {
     )
   }
 
-  // Filter by subject
   if (filterSubject.value) {
     result = result.filter(course => course.subject === filterSubject.value)
   }
@@ -364,17 +341,12 @@ const handleEnroll = async (courseId: string, event?: Event) => {
     event.stopPropagation()
   }
   
-  // Get course to know total lessons
   const course = courses.value.find(c => c.id === courseId)
-  const totalLessons = (course?.pages?.length || 4) + 1 // +1 for assessment
+  const totalLessons = (course?.pages?.length || 4) + 1
   enroll(courseId, totalLessons)
   
-  // Redirect to course detail page
   const router = useRouter()
-  const courseUrl = `/courses/${courseId}`
-  
-  // Use router.push for explicit navigation
-  await router.push(courseUrl)
+  await router.push(`/courses/${courseId}`)
 }
 
 const handleViewCourse = (courseId: string) => {

@@ -83,7 +83,6 @@ const props = defineProps<{
 const { speakText, stopSpeaking, isSpeaking } = useTTS()
 const selectedVoiceStyle = ref<'calm' | 'excited' | 'child-friendly' | 'deep' | 'female-teacher' | 'default'>('default')
 
-// Toggle TTS - start speaking or stop if already speaking
 const toggleTTS = () => {
   if (isSpeaking.value) {
     stopSpeaking()
@@ -93,31 +92,23 @@ const toggleTTS = () => {
 }
 
 const updateVoiceStyle = () => {
-  // Voice style will be applied on next speak
 }
 
-// Simple markdown parser
 const parseMarkdown = (text: string): string => {
   if (!text) return ''
   
   let html = text
-    // Headers
     .replace(/^### (.*$)/gim, '<h3>$1</h3>')
     .replace(/^## (.*$)/gim, '<h2>$1</h2>')
     .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-    // Bold
     .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
-    // Lists
     .replace(/^- (.*$)/gim, '<li>$1</li>')
     .replace(/^\d+\. (.*$)/gim, '<li>$1</li>')
-    // Code blocks
     .replace(/```([\s\S]*?)```/gim, '<pre><code>$1</code></pre>')
     .replace(/`([^`]+)`/gim, '<code>$1</code>')
-    // Line breaks
     .replace(/\n\n/gim, '</p><p>')
     .replace(/\n/gim, '<br>')
   
-  // Wrap list items
   html = html.replace(/(<li>.*<\/li>)/gim, (match) => {
     if (!match.includes('<ul>') && !match.includes('<ol>')) {
       return '<ul>' + match + '</ul>'
@@ -125,7 +116,6 @@ const parseMarkdown = (text: string): string => {
     return match
   })
   
-  // Wrap paragraphs
   html = '<p>' + html + '</p>'
   html = html.replace(/<p><(h[1-6]|ul|ol|pre|blockquote)/gim, '<$1')
   html = html.replace(/<\/(h[1-6]|ul|ol|pre|blockquote)><\/p>/gim, '</$1>')

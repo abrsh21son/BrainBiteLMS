@@ -165,7 +165,6 @@ const handleLogout = async () => {
   }
 }
 
-// Close mobile menu when route changes
 watch(() => route.path, () => {
   mobileMenuOpen.value = false
 })
