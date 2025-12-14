@@ -26,9 +26,12 @@ export class ApiClient {
       baseURL = `${baseURL}/api`;
     }
     
-    // Log in development to help debug
-    if (process.dev) {
-      console.log('API Base URL:', baseURL);
+    // Always log the base URL (helps debug production issues)
+    console.log('[API Client] Base URL configured:', baseURL);
+    
+    // Warn if using default (might indicate missing env var)
+    if (!process.env.NUXT_PUBLIC_BACKEND_URL && !baseURL.includes('localhost')) {
+      console.warn('[API Client] Using default backend URL. Set NUXT_PUBLIC_BACKEND_URL env var if this is incorrect.');
     }
     
     this._baseURL = baseURL;
@@ -68,9 +71,8 @@ export class ApiClient {
     const fullUrl = `${this.getBaseURL()}${url}`;
     
     try {
-      if (process.dev) {
-        console.log(`[API Client] GET ${fullUrl}`);
-      }
+      // Always log requests (helps debug production issues)
+      console.log(`[API Client] GET ${fullUrl}`);
       
       const response = await $fetch<ApiResponse<T>>(fullUrl, {
         ...options,
@@ -81,25 +83,29 @@ export class ApiClient {
         },
       });
 
-      if (process.dev) {
-        console.log(`[API Client] Response from ${fullUrl}:`, response);
-      }
+      console.log(`[API Client] Response from ${fullUrl}:`, {
+        success: response?.success,
+        hasData: !!response?.data,
+        dataType: Array.isArray(response?.data) ? 'array' : typeof response?.data,
+        dataLength: Array.isArray(response?.data) ? response.data.length : 'N/A',
+      });
 
-      return this.extractData(response);
+      const extracted = this.extractData(response);
+      console.log(`[API Client] Extracted data:`, {
+        type: Array.isArray(extracted) ? 'array' : typeof extracted,
+        length: Array.isArray(extracted) ? extracted.length : 'N/A',
+      });
+
+      return extracted;
     } catch (error: any) {
-      // Log error details for debugging (only in development)
-      if (process.dev) {
-        console.error('API Error Details:', {
-          url: fullUrl,
-          error,
-          status: error.status || error.statusCode,
-          message: error.message,
-          data: error.data,
-          response: error.response,
-          name: error.name,
-          cause: error.cause,
-        });
-      }
+      // Always log errors (helps debug production issues)
+      console.error('[API Client] Error Details:', {
+        url: fullUrl,
+        status: error.status || error.statusCode,
+        message: error.message,
+        name: error.name,
+        cause: error.cause,
+      });
       throw this.handleError(error);
     }
   }
@@ -199,18 +205,22 @@ export class ApiClient {
 
   private extractData<T>(response: any): T {
     // Backend returns { success: true, data: T, timestamp: string }
-    if (response?.success && response?.data !== undefined) {
+    if (response?.success === true && response?.data !== undefined) {
+      console.log('[API Client] Extracting data from success response');
       return response.data;
     }
-    // Fallback for direct data
+    // Fallback for direct data (without success wrapper)
     if (response?.data !== undefined) {
+      console.log('[API Client] Extracting data from response.data');
       return response.data;
     }
     // If response is already an array (direct array response)
     if (Array.isArray(response)) {
+      console.log('[API Client] Response is already an array');
       return response as T;
     }
     // If response is already the data (shouldn't happen with our interceptor)
+    console.warn('[API Client] Unexpected response format, returning as-is:', response);
     return response;
   }
 

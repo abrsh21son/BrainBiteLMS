@@ -192,6 +192,8 @@ Frontend runs on `http://localhost:3001`
 
 For complete step-by-step deployment instructions, see **[DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)**
 
+**📋 Frontend Deployment Checklist:** See [FRONTEND_DEPLOYMENT_CHECKLIST.md](./FRONTEND_DEPLOYMENT_CHECKLIST.md) for detailed frontend deployment and troubleshooting steps.
+
 ### Quick Overview
 
 **Backend (Render):**
@@ -290,6 +292,28 @@ npm run test:playwright # Run Playwright E2E tests
 ### Frontend Tests
 
 Frontend tests can be added using Vitest. Test structure is ready for expansion.
+
+## 🚨 QUICK FIX: Frontend Not Rendering Courses
+
+**If courses aren't showing, check these 4 things:**
+
+1. **Environment Variable** (Most Common Issue)
+   - Vercel → Settings → Environment Variables
+   - Set `NUXT_PUBLIC_BACKEND_URL=https://brainbitelms-backend.onrender.com`
+   - ⚠️ **NO `/api` suffix!**
+
+2. **Backend CORS**
+   - Render → Environment → Set `FRONTEND_URL` to your Vercel domain
+
+3. **Browser Console**
+   - F12 → Check for API errors or wrong URLs
+   - Should see: `[API Client] GET https://brainbitelms-backend.onrender.com/api/courses`
+
+4. **Backend Status**
+   - Test: `curl https://brainbitelms-backend.onrender.com/api/courses`
+   - Should return: `{"success":true,"data":[...]}`
+
+**📋 Complete deployment checklist:** See [FRONTEND_DEPLOYMENT_CHECKLIST.md](./FRONTEND_DEPLOYMENT_CHECKLIST.md)
 
 ## 🐛 Troubleshooting
 
