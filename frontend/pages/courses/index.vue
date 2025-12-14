@@ -89,13 +89,21 @@
             </svg>
           </div>
           <h3 class="text-xl font-semibold text-white mb-2">Error Loading Courses</h3>
-          <p class="text-gray-400 mb-6">{{ error }}</p>
+          <p class="text-gray-400 mb-6 whitespace-pre-line">{{ error }}</p>
           <button
+            v-if="user"
             @click="fetchCourses()"
             class="inline-flex items-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-all"
           >
             Try Again
           </button>
+          <NuxtLink
+            v-else
+            to="/login"
+            class="inline-flex items-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-all"
+          >
+            Log In
+          </NuxtLink>
         </div>
       </div>
 
@@ -287,15 +295,61 @@
 <script setup lang="ts">
 definePageMeta({
   middleware: 'auth',
-  layout: 'default'
+  layout: 'default',
+  ssr: false, // Disable SSR to prevent auth/session mismatch
 })
 
 const { courses, loading, error, fetchCourses } = useCourses()
 const { enroll, isEnrolled, isCompleted, getProgress, getNextLessonIndex, getStatus } = useEnrollment()
 
-await fetchCourses()
+// Wait for Supabase user session to be ready before fetching
+const user = useSupabaseUser()
+const supabase = useSupabaseClient()
+const sessionInitializing = ref(true)
+const hasAttemptedFetch = ref(false)
 
-const pending = computed(() => loading.value)
+// Function to check if session is ready and fetch courses
+const checkSessionAndFetch = async () => {
+  if (hasAttemptedFetch.value) return
+  
+  try {
+    // Get the current session to ensure it's loaded
+    const { data: { session } } = await supabase.auth.getSession()
+    
+    // Only fetch if we have a valid session with an access token
+    if (session?.access_token && user.value) {
+      sessionInitializing.value = false
+      hasAttemptedFetch.value = true
+      await fetchCourses()
+    } else if (session === null) {
+      // Session is confirmed to be null (not just loading)
+      sessionInitializing.value = false
+    }
+  } catch (error) {
+    console.error('Error checking session:', error)
+    sessionInitializing.value = false
+  }
+}
+
+// Watch for user changes
+watch(user, async (newUser) => {
+  if (newUser && !hasAttemptedFetch.value) {
+    await checkSessionAndFetch()
+  }
+}, { immediate: true })
+
+// Also check on mount after Supabase initializes
+onMounted(async () => {
+  // Wait a tick for Supabase to initialize
+  await nextTick()
+  
+  // Check session after a brief delay to ensure Supabase is ready
+  setTimeout(async () => {
+    await checkSessionAndFetch()
+  }, 100)
+})
+
+const pending = computed(() => loading.value || sessionInitializing.value)
 const searchQuery = ref('')
 const filterSubject = ref('')
 

@@ -8,10 +8,18 @@ export class ApiClient {
       return this._baseURL;
     }
     
-    // Use environment variable directly (works in both SSR and client)
-    // The runtime config is set from this env var in nuxt.config.ts
-    // Using env var directly avoids calling useRuntimeConfig outside setup context
-    const baseURL = process.env.NUXT_PUBLIC_BACKEND_URL || 'https://brainbitelms-backend.onrender.com/api';
+    // Use runtime config when available (client-side), fallback to env var (SSR-safe)
+    let baseURL: string;
+    try {
+      const config = useRuntimeConfig();
+      baseURL = config.public.backendUrl || process.env.NUXT_PUBLIC_BACKEND_URL || 'https://brainbitelms-backend.onrender.com/api';
+    } catch {
+      // Fallback if useRuntimeConfig is not available (e.g., outside setup context)
+      baseURL = process.env.NUXT_PUBLIC_BACKEND_URL || 'https://brainbitelms-backend.onrender.com/api';
+    }
+    
+    // Ensure base URL doesn't end with a slash
+    baseURL = baseURL.replace(/\/$/, '');
     
     this._baseURL = baseURL;
     return baseURL;
@@ -23,11 +31,14 @@ export class ApiClient {
     };
 
     try {
-      const supabase = useSupabaseClient();
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session?.access_token) {
-        headers.Authorization = `Bearer ${session.access_token}`;
+      // Only get session on client-side
+      if (process.client) {
+        const supabase = useSupabaseClient();
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.access_token) {
+          headers.Authorization = `Bearer ${session.access_token}`;
+        }
       }
     } catch (error) {
       console.warn('Failed to get auth token:', error);
@@ -128,20 +139,49 @@ export class ApiClient {
   }
 
   private handleError(error: any): Error {
+    // Check for HTTP status codes first
+    const statusCode = error.statusCode || error.status || error.response?.status;
+    
+    if (statusCode === 401) {
+      return new Error('Unauthorized: Please log in to access this resource.');
+    }
+    
+    if (statusCode === 403) {
+      return new Error('Forbidden: You do not have permission to access this resource.');
+    }
+    
+    if (statusCode === 404) {
+      return new Error('Not Found: The requested resource could not be found.');
+    }
+    
     // Nuxt $fetch error structure
     if (error.data) {
       const apiError = error.data as ApiErrorResponse;
-      return new Error(apiError.message || 'An error occurred');
+      if (apiError.message) {
+        return new Error(apiError.message);
+      }
     }
+    
     // H3/Nitro error structure
     if (error.response?._data) {
       const apiError = error.response._data as ApiErrorResponse;
-      return new Error(apiError.message || 'An error occurred');
+      if (apiError.message) {
+        return new Error(apiError.message);
+      }
     }
-    // Network errors
+    
+    // Network errors (only if no status code and network-related message)
     if (error.message) {
-      // Check if it's a network error
-      if (error.message.includes('fetch') || error.message.includes('network') || error.message.includes('ECONNREFUSED') || error.message.includes('Failed to fetch')) {
+      const isNetworkError = 
+        error.message.includes('fetch') || 
+        error.message.includes('network') || 
+        error.message.includes('ECONNREFUSED') || 
+        error.message.includes('Failed to fetch') ||
+        error.message.includes('ERR_NETWORK') ||
+        error.code === 'ECONNREFUSED' ||
+        error.code === 'ETIMEDOUT';
+      
+      if (isNetworkError && !statusCode) {
         const backendUrl = this.getBaseURL();
         return new Error(
           `Network error: Could not connect to the backend server at ${backendUrl}.\n\n` +
@@ -151,8 +191,10 @@ export class ApiClient {
           `3. Required environment variables are set in backend/.env (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, AI_API_KEY)`
         );
       }
+      
       return new Error(error.message);
     }
+    
     return new Error('An unexpected error occurred');
   }
 }

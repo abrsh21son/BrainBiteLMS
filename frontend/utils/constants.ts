@@ -30,11 +30,12 @@ export const ROUTES = {
 } as const;
 
 // API Endpoints
+// Note: These endpoints are appended to the base URL which already includes /api
 export const API_ENDPOINTS = {
-  COURSES: '/api/courses',
-  COURSE_BY_ID: (id: string) => `/api/courses/${id}`,
-  GENERATE_COURSE: '/api/courses/generate',
-  HEALTH: '/api/health',
+  COURSES: '/courses',
+  COURSE_BY_ID: (id: string) => `/courses/${id}`,
+  GENERATE_COURSE: '/courses/generate',
+  HEALTH: '/health',
 } as const;
 
 // UI Constants
