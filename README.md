@@ -1,129 +1,168 @@
 # BrainBite - AI-Powered Learning Management System
 
-## Overview
-BrainBite is an AI-powered LMS that is suitable for every learner to create courses based on their level and status, giving easy and appropriate contents to learners. It's a lightweight e-learning MVP that allows users to generate courses using AI, browse them, and take assessments. Built as a modern, full-stack application with a focus on user experience and AI-powered content generation.
+> A lightweight e-learning MVP that allows users to generate AI-powered courses, browse them, and take interactive assessments.
 
-## Features
+## 🚀 Quick Start
 
-- ✅ **User Authentication**: Sign up, log in, and password reset using Supabase Auth
-- ✅ **Course Browsing**: View all published courses with search and filtering
-- ✅ **AI Course Generation**: Generate complete courses with 4 lessons and 2 MCQ questions using Groq AI
-- ✅ **Interactive Learning**: Navigate through lessons with elegant UI and progress tracking
-- ✅ **Assessment System**: Take quizzes with instant feedback and AI-generated explanations
-- ✅ **Text-to-Speech**: Listen to course content with voice style variations
-- ✅ **AI Learning Assistant**: Ask questions about lessons and get AI-powered answers
-- ✅ **Course Recommendations**: Get personalized course suggestions after completing assessments
+```bash
+# Clone repository
+git clone <repository-url>
+cd BrainBite
 
-## Tech Stack
+# Backend setup
+cd backend
+npm install
+cp .env.example .env  # Configure your environment variables
+npm run start:dev
 
-- **Frontend**: 
-  - Nuxt 3 (Vue.js framework)
-  - Tailwind CSS (styling)
-  - Supabase Client (authentication)
-  - TypeScript
+# Frontend setup (in new terminal)
+cd frontend
+npm install
+cp .env.example .env  # Configure your environment variables
+npm run dev
+```
 
-- **Backend**: 
-  - NestJS (Node.js framework)
-  - Supabase Client (database)
-  - Groq API (AI content generation - OpenAI-compatible)
-  - TypeScript
+Visit:
+- Frontend: `http://localhost:3001`
+- Backend API: `http://localhost:3000/api`
+- API Docs: `http://localhost:3000/api/docs`
 
-- **Database**: 
-  - Supabase (PostgreSQL with Row Level Security)
+## ✨ Features
 
-- **Deployment**:
-  - Frontend: Vercel/Netlify (static hosting)
-  - Backend: Render/Railway/Fly.io (Node.js hosting)
+- ✅ **User Authentication** - Sign up, log in, and password reset using Supabase Auth
+- ✅ **AI Course Generation** - Generate complete courses with 4 lessons and 2 MCQ questions using Groq AI
+- ✅ **Course Browsing** - View all published courses with search and filtering
+- ✅ **Interactive Learning** - Navigate through lessons with elegant UI and progress tracking
+- ✅ **Assessment System** - Take quizzes with instant feedback and AI-generated explanations
+- ✅ **Text-to-Speech** - Listen to course content with voice style variations
+- ✅ **AI Learning Assistant** - Ask questions about lessons and get AI-powered answers
+- ✅ **Course Recommendations** - Get personalized course suggestions after completing assessments
 
-## Project Structure
+## 🛠️ Tech Stack
+
+### Frontend
+- **Framework:** Nuxt 3 (Vue.js)
+- **Styling:** Tailwind CSS
+- **Authentication:** Supabase Client
+- **Language:** TypeScript
+
+### Backend
+- **Framework:** NestJS
+- **Database:** Supabase (PostgreSQL)
+- **AI:** Groq API (OpenAI-compatible)
+- **Language:** TypeScript
+
+### Infrastructure
+- **Database:** Supabase (PostgreSQL with Row Level Security)
+- **Deployment:** 
+  - Frontend: Vercel
+  - Backend: Render
+
+## 📁 Project Structure
 
 ```
 BrainBite/
-├── frontend/          # Nuxt 3 application
-│   ├── pages/        # Route pages
-│   ├── components/   # Vue components
-│   ├── composables/  # Reusable composables
-│   ├── layouts/      # Layout templates
-│   └── middleware/   # Route middleware
-├── backend/          # NestJS application
+├── frontend/                 # Nuxt 3 application
+│   ├── pages/               # Route pages
+│   │   ├── index.vue        # Landing page
+│   │   ├── login.vue         # Login page
+│   │   ├── signup.vue       # Signup page
+│   │   ├── courses/         # Course pages
+│   │   └── generate-course.vue
+│   ├── components/          # Vue components
+│   │   ├── common/          # Reusable components
+│   │   └── course/          # Course-specific components
+│   ├── composables/         # Reusable composables
+│   ├── layouts/             # Layout templates
+│   ├── middleware/          # Route middleware
+│   ├── utils/               # Utility functions
+│   └── types/               # TypeScript types
+│
+├── backend/                 # NestJS application
 │   ├── src/
-│   │   ├── courses/  # Course module
-│   │   ├── ai/       # AI service
-│   │   └── supabase/ # Supabase integration
-│   └── schema.sql    # Database schema
-└── README.md
+│   │   ├── courses/         # Course module
+│   │   │   ├── courses.controller.ts
+│   │   │   ├── courses.service.ts
+│   │   │   ├── dto/         # Data Transfer Objects
+│   │   │   ├── entities/   # Type-safe entities
+│   │   │   └── repositories/ # Repository pattern
+│   │   ├── ai/              # AI service
+│   │   │   └── ai.service.ts
+│   │   ├── supabase/        # Supabase integration
+│   │   ├── common/          # Shared utilities
+│   │   │   ├── guards/      # Auth guards
+│   │   │   ├── filters/     # Exception filters
+│   │   │   ├── interceptors/ # Request/response interceptors
+│   │   │   └── pipes/       # Validation pipes
+│   │   └── main.ts          # Application entry point
+│   └── schema.sql           # Database schema
+│
+├── DEPLOYMENT_GUIDE.md      # Complete deployment instructions
+└── README.md                # This file
 ```
 
-## Prerequisites
+## 🔧 Setup Instructions
+
+### Prerequisites
 
 - Node.js (v18 or higher)
 - npm or yarn
 - Supabase Account ([supabase.com](https://supabase.com))
 - Groq API Key ([console.groq.com](https://console.groq.com)) - Free tier available
 
-## Setup Instructions
-
-### 1. Clone the Repository
-
-```bash
-git clone <repository-url>
-cd BrainBite
-```
-
-### 2. Database Setup (Supabase)
+### 1. Database Setup (Supabase)
 
 1. Create a new project on [Supabase Dashboard](https://supabase.com/dashboard)
 2. Go to **SQL Editor** in your Supabase project
 3. Copy the contents of `backend/schema.sql`
 4. Paste and run the SQL script to create all necessary tables and RLS policies
 
-### 3. Environment Variables
+### 2. Environment Variables
 
-#### Backend Environment Variables
-
-Create a `.env` file in the `backend/` directory:
+#### Backend (`backend/.env`)
 
 ```env
 # Supabase Configuration
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
+SUPABASE_JWT_SECRET=your_jwt_secret_here
 
-# AI Configuration (Groq API - Free tier available)
+# AI Configuration (Groq API)
 AI_API_KEY=gsk_your_groq_api_key_here
-AI_MODEL=llama-3.1-8b-instant  # Optional: override default model
+AI_API_URL=https://api.groq.com/openai/v1
+AI_MODEL=llama-3.1-8b-instant
 
 # Frontend URL for CORS
 FRONTEND_URL=http://localhost:3001
 
 # Server Configuration
 PORT=3000
+NODE_ENV=development
 ```
 
-**Important Notes:**
+**Important:**
 - Use the **service_role** key (not anon key) for the backend
 - Get your Groq API key from [console.groq.com/keys](https://console.groq.com/keys)
 - Groq API keys start with `gsk_`
 
-#### Frontend Environment Variables
-
-Create a `.env` file in the `frontend/` directory:
+#### Frontend (`frontend/.env`)
 
 ```env
 # Supabase Configuration
 NUXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NUXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
 
-# Backend API URL
+# Backend API URL (no /api suffix)
 NUXT_PUBLIC_BACKEND_URL=http://localhost:3000
 ```
 
-**Important Notes:**
+**Important:**
 - Use the **anon** key (public key) for the frontend
-- For production, update `NUXT_PUBLIC_BACKEND_URL` to your deployed backend URL
+- Backend URL should NOT include `/api` suffix
 
-### 4. Installation & Running
+### 3. Installation & Running
 
-#### Backend Setup
+#### Backend
 
 ```bash
 cd backend
@@ -131,10 +170,12 @@ npm install
 npm run start:dev
 ```
 
-The backend will run on `http://localhost:3000`
-- API Documentation: `http://localhost:3000/api` (Swagger UI)
+Backend runs on `http://localhost:3000`
+- API Root: `http://localhost:3000/api`
+- Swagger Docs: `http://localhost:3000/api/docs`
+- Health Check: `http://localhost:3000/api/health`
 
-#### Frontend Setup
+#### Frontend
 
 ```bash
 cd frontend
@@ -142,61 +183,50 @@ npm install
 npm run dev
 ```
 
-The frontend will run on `http://localhost:3001`
+Frontend runs on `http://localhost:3001`
 
-## Deployment
+## 🚀 Deployment
 
-### Frontend Deployment (Vercel/Netlify)
+For complete step-by-step deployment instructions, see **[DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)**
 
-#### Using Vercel:
+### Quick Overview
 
-1. Push your code to GitHub
-2. Import your repository in Vercel
-3. Configure environment variables in Vercel dashboard:
-   - `NUXT_PUBLIC_SUPABASE_URL`
-   - `NUXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `NUXT_PUBLIC_BACKEND_URL` (your deployed backend URL)
-4. Set build command: `npm run build`
-5. Set output directory: `.output`
+**Backend (Render):**
+1. Create Web Service on Render
+2. Connect GitHub repository
+3. Set build command: `cd backend && npm install && npm run build`
+4. Set start command: `cd backend && npm run start:prod`
+5. Add environment variables
 6. Deploy
 
-#### Using Netlify:
+**Frontend (Vercel):**
+1. Import GitHub repository in Vercel
+2. Set root directory: `frontend`
+3. Add environment variables
+4. Deploy
 
-1. Push your code to GitHub
-2. Import your repository in Netlify
-3. Configure environment variables (same as Vercel)
-4. Build command: `npm run build`
-5. Publish directory: `.output/public`
-6. Deploy
+See [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) for detailed instructions.
 
-### Backend Deployment (Render/Railway/Fly.io)
+## 📚 API Endpoints
 
-#### Using Render:
+### Public Endpoints
 
-1. Create a new **Web Service** on Render
-2. Connect your GitHub repository
-3. Configure:
-   - **Build Command**: `cd backend && npm install && npm run build`
-   - **Start Command**: `cd backend && npm run start:prod`
-   - **Environment**: Node
-4. Add environment variables:
-   - `SUPABASE_URL`
-   - `SUPABASE_SERVICE_ROLE_KEY`
-   - `AI_API_KEY`
-   - `FRONTEND_URL` (your deployed frontend URL)
-5. Deploy
+- `GET /api/courses` - List all published courses
+- `GET /api/courses/:id` - Get course details with pages and questions
+- `GET /api/health` - Health check endpoint
 
-#### Using Railway:
+### Protected Endpoints (Require Authentication)
 
-1. Create a new project on Railway
-2. Deploy from GitHub repository
-3. Set root directory to `backend`
-4. Add environment variables (same as Render)
-5. Deploy
+- `POST /api/courses/generate` - Generate new course with AI
+- `POST /api/courses/ask-question` - Ask AI about lesson content
+- `POST /api/courses/generate-summary` - Generate lesson summary
+- `POST /api/courses/explain-answer` - Get AI explanation for quiz answer
 
-**Important**: Update your frontend `NUXT_PUBLIC_BACKEND_URL` to point to your deployed backend URL.
+**Authentication:** Send JWT token in `Authorization: Bearer <token>` header
 
-## Architecture
+**API Documentation:** Visit `/api/docs` when backend is running for interactive Swagger documentation.
+
+## 🏗️ Architecture
 
 ### High-Level Architecture
 
@@ -219,45 +249,29 @@ The frontend will run on `http://localhost:3001`
 
 ### Data Flow
 
-1. **Authentication**: User signs up/logs in via Supabase Auth (handled in frontend)
-2. **Course Generation**: 
+1. **Authentication:** User signs up/logs in via Supabase Auth (handled in frontend)
+2. **Course Generation:**
    - User submits form → Frontend calls NestJS API
    - NestJS verifies JWT → Calls Groq AI → Generates course content
    - NestJS stores course in Supabase (using service role key)
    - Returns course ID to frontend
    - Frontend redirects to course details page
-3. **Course Viewing**: 
+3. **Course Viewing:**
    - Frontend fetches courses from NestJS API
    - NestJS queries Supabase (respects RLS policies)
    - Returns data to frontend for display
 
 ### Database Schema
 
-- **courses**: Main course table with title, subject, description
-- **course_pages**: Content pages/lessons for each course
-- **questions**: MCQ questions for assessments
-- **question_options**: Answer options with correct answer flags
+- **courses** - Main course table with title, subject, description
+- **course_pages** - Content pages/lessons for each course
+- **questions** - MCQ questions for assessments
+- **question_options** - Answer options with correct answer flags
+- **attempts** - User assessment attempts (optional)
 
 See `backend/schema.sql` for complete schema and RLS policies.
 
-## API Endpoints
-
-### Public Endpoints
-
-- `GET /api/courses` - List all published courses
-- `GET /api/courses/:id` - Get course details with pages and questions
-- `GET /api/courses/:id/recommendations` - Get course recommendations
-
-### Protected Endpoints (Require Authentication)
-
-- `POST /api/courses/generate` - Generate new course with AI
-- `POST /api/courses/ask-question` - Ask AI about lesson content
-- `POST /api/courses/generate-summary` - Generate lesson summary
-- `POST /api/courses/explain-answer` - Get AI explanation for quiz answer
-
-**Authentication**: Send JWT token in `Authorization: Bearer <token>` header
-
-## Testing
+## 🧪 Testing
 
 ### Backend Tests
 
@@ -268,61 +282,72 @@ npm run test:watch     # Run tests in watch mode
 npm run test:cov       # Run tests with coverage
 npm run test:e2e       # Run end-to-end tests (Jest)
 npm run test:playwright # Run Playwright E2E tests
-npm run test:playwright:ui # Run Playwright tests with UI
-```
-
-**Note:** Before running Playwright tests, install dependencies:
-```bash
-npm install --save-dev @playwright/test
-npx playwright install
 ```
 
 ### Frontend Tests
 
-Frontend tests can be added using Vitest. Currently, test structure is ready for expansion.
+Frontend tests can be added using Vitest. Test structure is ready for expansion.
 
-### Test Coverage
-
-- ✅ Unit tests for AI service (validates 4 pages and 2 questions requirement)
-- ✅ E2E test structure (Playwright) for auth, course generation, and assessment flows
-- See `REQUIREMENTS_COMPLIANCE.md` for detailed test verification
-
-## Troubleshooting
+## 🐛 Troubleshooting
 
 ### Common Issues
 
-1. **"Table not found" error**: Make sure you've run `backend/schema.sql` in Supabase SQL Editor
-2. **CORS errors**: Verify `FRONTEND_URL` is set correctly in backend `.env`
-3. **Authentication errors**: Check that Supabase keys are correct and not expired
-4. **AI generation fails**: Verify `AI_API_KEY` is a valid Groq API key (starts with `gsk_`)
-5. **Module not found errors**: Run `npm install` in both frontend and backend directories
+1. **"Table not found" error**
+   - Solution: Run `backend/schema.sql` in Supabase SQL Editor
 
-See individual troubleshooting guides:
-- `backend/DATABASE_SETUP.md` - Database setup issues
-- `backend/QUICK_FIX.md` - Quick fixes for common errors
-- `frontend/SUPABASE_TROUBLESHOOTING.md` - Supabase auth issues
+2. **CORS errors**
+   - Solution: Verify `FRONTEND_URL` is set correctly in backend `.env`
 
-## Development
+3. **Authentication errors**
+   - Solution: Check that Supabase keys are correct and not expired
+
+4. **AI generation fails**
+   - Solution: Verify `AI_API_KEY` is a valid Groq API key (starts with `gsk_`)
+
+5. **Module not found errors**
+   - Solution: Run `npm install` in both frontend and backend directories
+
+6. **Environment variables not working**
+   - Solution: Ensure frontend variables start with `NUXT_PUBLIC_` prefix
+   - Solution: Restart dev server after changing `.env` files
+
+## 📖 Development Guidelines
 
 ### Code Structure
 
-- **Frontend**: Component-based architecture with composables for reusable logic
-- **Backend**: Modular structure with services, controllers, and repositories
-- **Type Safety**: Full TypeScript support across the stack
+- **Frontend:** Component-based architecture with composables for reusable logic
+- **Backend:** Modular structure with services, controllers, and repositories
+- **Type Safety:** Full TypeScript support across the stack
 
 ### Adding Features
 
-1. **Frontend**: Add pages in `frontend/pages/`, components in `frontend/components/`
-2. **Backend**: Create modules in `backend/src/`, add routes in controllers
-3. **Database**: Update `backend/schema.sql` and run in Supabase
+1. **Frontend:** Add pages in `frontend/pages/`, components in `frontend/components/`
+2. **Backend:** Create modules in `backend/src/`, add routes in controllers
+3. **Database:** Update `backend/schema.sql` and run in Supabase
 
-## License
+### Best Practices
+
+- ✅ Use TypeScript for type safety
+- ✅ Follow NestJS module structure
+- ✅ Use composables for reusable frontend logic
+- ✅ Validate all inputs using DTOs
+- ✅ Handle errors gracefully
+- ✅ Use environment variables for configuration
+- ✅ Follow RESTful API conventions
+
+## 📄 License
 
 Private repository - All rights reserved
 
-## Support
+## 📞 Support
 
-For issues or questions, please refer to:
-- `REQUIREMENTS_COMPLIANCE.md` - Complete requirements checklist
-- `SETUP_GUIDE.md` - Detailed setup instructions
-- Backend and Frontend README files in respective directories
+For deployment help, see [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)
+
+For issues or questions:
+- Check the troubleshooting section above
+- Review deployment logs
+- Verify environment variables are set correctly
+
+---
+
+**Built with ❤️ using Nuxt 3, NestJS, and Supabase**

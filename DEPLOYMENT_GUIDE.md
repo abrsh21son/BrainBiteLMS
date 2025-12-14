@@ -1,450 +1,426 @@
-# Complete Deployment Guide - BrainBite LMS
+# 🚀 BrainBite Deployment Guide
 
-This guide covers step-by-step deployment of both frontend (Nuxt 3) and backend (NestJS) to production.
-
-## 📋 Prerequisites
-
-- GitHub account with repository access
-- Supabase account and project
-- Vercel/Netlify account (for frontend)
-- Render/Railway/Fly.io account (for backend)
-- OpenAI API key (or Groq API key)
-- Domain name (optional)
+Complete step-by-step guide to deploy BrainBite backend to Render and frontend to Vercel.
 
 ---
 
-## 🎯 Part 1: Backend Deployment (NestJS)
+## 📋 Table of Contents
 
-### Option A: Deploy to Render (Recommended)
+1. [Prerequisites](#prerequisites)
+2. [Backend Deployment (Render)](#backend-deployment-render)
+3. [Frontend Deployment (Vercel)](#frontend-deployment-vercel)
+4. [Environment Variables](#environment-variables)
+5. [Database Setup](#database-setup)
+6. [Testing & Verification](#testing--verification)
+7. [Troubleshooting](#troubleshooting)
 
-#### Step 1: Prepare Backend for Deployment
+---
 
-1. **Update `backend/package.json`** to ensure build scripts are correct:
+## Prerequisites
 
-```json
-{
-  "scripts": {
-    "build": "nest build",
-    "start": "node dist/main",
-    "start:prod": "node dist/main"
-  }
-}
-```
+Before starting, ensure you have:
 
-2. **Create `backend/.env.production`** (for reference, don't commit this):
+- ✅ GitHub account with your BrainBite repository
+- ✅ Supabase account and project created
+- ✅ Vercel account (free tier available)
+- ✅ Render account (free tier available)
+- ✅ Groq API key ([console.groq.com](https://console.groq.com)) or OpenAI API key
 
-```env
-NODE_ENV=production
-PORT=3000
+---
 
-# Supabase Configuration
-SUPABASE_URL=your_supabase_project_url
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-SUPABASE_JWT_SECRET=your_jwt_secret
+## Backend Deployment (Render)
 
-# AI Configuration
-AI_API_KEY=your_openai_or_groq_api_key
-AI_API_URL=https://api.groq.com/openai/v1  # or OpenAI URL
-AI_MODEL=llama-3.1-8b-instant  # or gpt-3.5-turbo
+### Step 1: Prepare Your Repository
 
-# CORS - Add your frontend URL after deployment
-FRONTEND_URL=https://your-frontend-domain.vercel.app
-```
+1. **Ensure your code is pushed to GitHub:**
+   ```bash
+   git add .
+   git commit -m "Prepare for deployment"
+   git push origin main
+   ```
 
-#### Step 2: Deploy to Render
+2. **Verify backend structure:**
+   - `backend/package.json` exists
+   - `backend/src/main.ts` exists
+   - `backend/schema.sql` exists
 
-1. **Go to [Render Dashboard](https://dashboard.render.com/)**
-2. **Click "New +" → "Web Service"**
-3. **Connect your GitHub repository**
-4. **Configure the service:**
+### Step 2: Create Render Account
+
+1. Go to [render.com](https://render.com)
+2. Sign up with GitHub (recommended for easy integration)
+3. Verify your email
+
+### Step 3: Create New Web Service
+
+1. **Click "New +" → "Web Service"**
+2. **Connect GitHub Repository:**
+   - Click "Connect account" if not connected
+   - Select your BrainBite repository
+   - Click "Connect"
+
+3. **Configure Service Settings:**
    - **Name:** `brainbite-backend` (or your preferred name)
    - **Environment:** `Node`
+   - **Region:** Choose closest to your users (e.g., `Oregon (US West)`)
+   - **Branch:** `main` (or your default branch)
+   - **Root Directory:** Leave empty (or set to `backend` if you prefer)
+   - **Runtime:** `Node`
    - **Build Command:** `cd backend && npm install && npm run build`
    - **Start Command:** `cd backend && npm run start:prod`
-   - **Root Directory:** Leave empty (or set to `backend` if you want)
 
-5. **Add Environment Variables:**
-   - Click "Environment" tab
-   - Add all variables from `.env.production`:
-     ```
-     NODE_ENV=production
-     PORT=3000
-     SUPABASE_URL=your_supabase_project_url
-     SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-     SUPABASE_JWT_SECRET=your_jwt_secret
-     AI_API_KEY=your_api_key
-     AI_API_URL=https://api.groq.com/openai/v1
-     AI_MODEL=llama-3.1-8b-instant
-     FRONTEND_URL=https://your-frontend-domain.vercel.app
-     ```
+4. **Click "Advanced" → Add Environment Variables:**
+   
+   Click "Add Environment Variable" for each:
 
-6. **Click "Create Web Service"**
-7. **Wait for deployment** (first build takes 5-10 minutes)
-8. **Copy your backend URL** (e.g., `https://brainbite-backend.onrender.com`)
+   ```
+   NODE_ENV = production
+   PORT = 3000
+   SUPABASE_URL = https://xxxxx.supabase.co
+   SUPABASE_SERVICE_ROLE_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+   SUPABASE_JWT_SECRET = your-jwt-secret-from-supabase
+   AI_API_KEY = gsk_your_groq_api_key_here
+   AI_API_URL = https://api.groq.com/openai/v1
+   AI_MODEL = llama-3.1-8b-instant
+   FRONTEND_URL = https://your-frontend.vercel.app
+   ```
+   
+   **⚠️ Important:** 
+   - Get `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` from Supabase Dashboard → Settings → API
+   - Get `SUPABASE_JWT_SECRET` from Supabase Dashboard → Settings → Auth → JWT Settings
+   - For `FRONTEND_URL`, you'll update this after deploying frontend (use placeholder for now)
 
-#### Step 3: Update CORS Configuration
+5. **Click "Create Web Service"**
 
-1. **Go to your backend service on Render**
-2. **Update `FRONTEND_URL` environment variable** with your frontend URL
-3. **Redeploy** (or it will auto-redeploy)
+6. **Wait for Deployment:**
+   - First deployment takes 5-10 minutes
+   - Watch the build logs for any errors
+   - Once deployed, you'll see: "Your service is live at https://brainbite-backend.onrender.com"
+
+7. **Copy Your Backend URL:**
+   - Example: `https://brainbite-backend.onrender.com`
+   - Save this URL - you'll need it for frontend configuration
+
+### Step 4: Verify Backend Deployment
+
+1. **Test Health Endpoint:**
+   ```bash
+   curl https://your-backend-url.onrender.com/api/health
+   ```
+   Should return: `{"status":"ok"}`
+
+2. **Test API Endpoint:**
+   ```bash
+   curl https://your-backend-url.onrender.com/api/courses
+   ```
+   Should return: `[]` (empty array) or list of courses
+
+3. **Check Swagger Documentation:**
+   - Visit: `https://your-backend-url.onrender.com/api/docs`
+   - Should see API documentation
 
 ---
 
-### Option B: Deploy to Railway
+## Frontend Deployment (Vercel)
 
-1. **Go to [Railway Dashboard](https://railway.app/)**
-2. **Click "New Project" → "Deploy from GitHub"**
-3. **Select your repository**
-4. **Add service:**
-   - **Root Directory:** `backend`
-   - **Build Command:** `npm install && npm run build`
-   - **Start Command:** `npm run start:prod`
+### Step 1: Prepare Frontend
 
-5. **Add Environment Variables** (same as Render)
-6. **Deploy**
+1. **Verify `frontend/vercel.json` exists** (should already be in repo)
 
----
+2. **Ensure `frontend/nuxt.config.ts` is configured correctly** (should already be correct)
 
-### Option C: Deploy to Fly.io
+### Step 2: Create Vercel Account
 
-1. **Install Fly CLI:**
-   ```bash
-   powershell -Command "iwr https://fly.io/install.ps1 -useb | iex"
-   ```
+1. Go to [vercel.com](https://vercel.com)
+2. Sign up with GitHub (recommended)
+3. Verify your email
 
-2. **Login:**
-   ```bash
-   fly auth login
-   ```
+### Step 3: Import Project
 
-3. **Create app:**
-   ```bash
-   cd backend
-   fly launch
-   ```
+1. **Click "Add New..." → "Project"**
 
-4. **Configure `fly.toml`:**
-   ```toml
-   app = "brainbite-backend"
-   primary_region = "iad"
+2. **Import Git Repository:**
+   - Select your BrainBite repository
+   - Click "Import"
 
-   [build]
-     builder = "paketobuildpacks/builder:base"
-
-   [http_service]
-     internal_port = 3000
-     force_https = true
-     auto_stop_machines = true
-     auto_start_machines = true
-     min_machines_running = 0
-     processes = ["app"]
-
-   [[services]]
-     http_checks = []
-     internal_port = 3000
-     processes = ["app"]
-     protocol = "tcp"
-     script_checks = []
-   ```
-
-5. **Set secrets:**
-   ```bash
-   fly secrets set SUPABASE_URL=your_url
-   fly secrets set SUPABASE_SERVICE_ROLE_KEY=your_key
-   fly secrets set AI_API_KEY=your_key
-   # ... etc
-   ```
-
-6. **Deploy:**
-   ```bash
-   fly deploy
-   ```
-
----
-
-## 🎨 Part 2: Frontend Deployment (Nuxt 3)
-
-### Option A: Deploy to Vercel (Recommended)
-
-#### Step 1: Prepare Frontend for Deployment
-
-1. **Verify `frontend/nuxt.config.ts`** has correct configuration:
-
-```typescript
-export default defineNuxtConfig({
-  compatibilityDate: '2024-04-03',
-  devtools: { enabled: true },
-  
-  // ... existing config
-  
-  runtimeConfig: {
-    public: {
-      backendUrl: process.env.NUXT_PUBLIC_BACKEND_URL || 'http://localhost:3000',
-      supabaseUrl: process.env.NUXT_PUBLIC_SUPABASE_URL,
-      supabaseAnonKey: process.env.NUXT_PUBLIC_SUPABASE_ANON_KEY,
-    },
-  },
-})
-```
-
-2. **Create `frontend/.env.production`** (for reference):
-
-```env
-# Note: Backend URL should NOT include /api - the frontend adds it automatically
-NUXT_PUBLIC_BACKEND_URL=https://your-backend-url.onrender.com
-NUXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-NUXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-```
-
-#### Step 2: Deploy to Vercel
-
-1. **Go to [Vercel Dashboard](https://vercel.com/dashboard)**
-2. **Click "Add New..." → "Project"**
-3. **Import your GitHub repository**
-4. **Configure Project:**
-   - **Framework Preset:** Nuxt.js (auto-detected)
+3. **Configure Project:**
+   - **Framework Preset:** `Nuxt.js` (auto-detected)
    - **Root Directory:** `frontend`
-   - **Build Command:** `npm run build` (or leave default)
-   - **Output Directory:** `.output/public` (Nuxt 3 default)
-   - **Install Command:** `npm install`
+   - **Build Command:** `npm run build` (auto-detected)
+   - **Output Directory:** `.output/public` (auto-detected)
+   - **Install Command:** `npm install` (auto-detected)
 
-5. **Add Environment Variables:**
-   - Click "Environment Variables"
-   - Add:
-     ```
-     NUXT_PUBLIC_BACKEND_URL=https://your-backend-url.onrender.com
-     NUXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-     NUXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-     ```
+4. **Add Environment Variables:**
+   
+   Click "Add" for each variable:
 
-6. **Click "Deploy"**
-7. **Wait for deployment** (2-5 minutes)
-8. **Copy your frontend URL** (e.g., `https://brainbite-lms.vercel.app`)
-
-#### Step 3: Update Backend CORS
-
-1. **Go back to your backend service (Render/Railway/Fly.io)**
-2. **Update `FRONTEND_URL` environment variable** with your Vercel URL
-3. **Redeploy backend** (or it will auto-redeploy)
-
----
-
-### Option B: Deploy to Netlify
-
-1. **Go to [Netlify Dashboard](https://app.netlify.com/)**
-2. **Click "Add new site" → "Import an existing project"**
-3. **Connect GitHub repository**
-4. **Configure build:**
-   - **Base directory:** `frontend`
-   - **Build command:** `npm run build`
-   - **Publish directory:** `frontend/.output/public`
-
-5. **Add Environment Variables:**
-   - Go to "Site settings" → "Environment variables"
-   - Add the same variables as Vercel
-
-6. **Deploy**
-
----
-
-## 🔧 Part 3: Supabase Configuration
-
-### Step 1: Get Supabase Credentials
-
-1. **Go to [Supabase Dashboard](https://app.supabase.com/)**
-2. **Select your project**
-3. **Go to Settings → API**
-4. **Copy:**
-   - **Project URL** → `SUPABASE_URL` and `NUXT_PUBLIC_SUPABASE_URL`
-   - **anon/public key** → `NUXT_PUBLIC_SUPABASE_ANON_KEY`
-   - **service_role key** → `SUPABASE_SERVICE_ROLE_KEY` (keep secret!)
-
-5. **Go to Settings → Auth → JWT Settings**
-   - **JWT Secret** → `SUPABASE_JWT_SECRET`
-
-### Step 2: Configure Supabase RLS Policies
-
-Your `schema.sql` should already have RLS policies. Verify in Supabase:
-
-1. **Go to SQL Editor**
-2. **Run your `schema.sql`** if not already done
-3. **Verify policies are active:**
-   - Go to Authentication → Policies
-   - Check that policies exist for `courses`, `course_pages`, `questions`, `question_options`
-
----
-
-## 🔐 Part 4: Environment Variables Summary
-
-### Backend Environment Variables
-
-```env
-# Required
-NODE_ENV=production
-PORT=3000
-SUPABASE_URL=https://xxxxx.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-SUPABASE_JWT_SECRET=your-jwt-secret-here
-AI_API_KEY=your-api-key-here
-AI_API_URL=https://api.groq.com/openai/v1  # or https://api.openai.com/v1
-AI_MODEL=llama-3.1-8b-instant  # or gpt-3.5-turbo
-FRONTEND_URL=https://your-frontend.vercel.app
-```
-
-### Frontend Environment Variables
-
-```env
-# Required
-# Note: Backend URL should NOT include /api - frontend adds it automatically
-NUXT_PUBLIC_BACKEND_URL=https://your-backend.onrender.com
-NUXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
-NUXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
-
----
-
-## 🧪 Part 5: Testing Deployment
-
-### Test Backend
-
-1. **Check health endpoint:**
-   ```bash
-   curl https://your-backend.onrender.com/health
    ```
-
-2. **Test API:**
-   ```bash
-   curl https://your-backend.onrender.com/courses
+   NUXT_PUBLIC_BACKEND_URL = https://your-backend-url.onrender.com
+   NUXT_PUBLIC_SUPABASE_URL = https://xxxxx.supabase.co
+   NUXT_PUBLIC_SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
    ```
+   
+   **⚠️ Important:**
+   - `NUXT_PUBLIC_BACKEND_URL` should be your Render backend URL (without `/api` suffix)
+   - Get Supabase values from Supabase Dashboard → Settings → API
+   - Use `anon` key (not `service_role` key) for frontend
 
-### Test Frontend
+5. **Click "Deploy"**
+
+6. **Wait for Deployment:**
+   - Build takes 2-5 minutes
+   - Watch build logs for errors
+   - Once deployed: "Your deployment is ready"
+
+7. **Copy Your Frontend URL:**
+   - Example: `https://brainbite-lms.vercel.app`
+   - Save this URL
+
+### Step 4: Update Backend CORS
+
+1. **Go back to Render Dashboard**
+2. **Select your backend service**
+3. **Go to "Environment" tab**
+4. **Update `FRONTEND_URL` variable:**
+   - Change from placeholder to your actual Vercel URL
+   - Example: `https://brainbite-lms.vercel.app`
+5. **Save changes** (Render will auto-redeploy)
+
+### Step 5: Verify Frontend Deployment
 
 1. **Visit your frontend URL**
-2. **Try to:**
-   - Sign up / Login
-   - View courses
-   - Generate a course
-   - View course details
-   - Take assessment
+2. **Test the following:**
+   - ✅ Homepage loads
+   - ✅ Can navigate to login/signup
+   - ✅ Can sign up and login
+   - ✅ Can view courses list
+   - ✅ Can generate a course
+   - ✅ Can view course details
+   - ✅ Can take assessment
+
+---
+
+## Environment Variables
+
+### Backend (Render) - Required Variables
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `NODE_ENV` | Environment | `production` |
+| `PORT` | Server port | `3000` |
+| `SUPABASE_URL` | Supabase project URL | `https://xxxxx.supabase.co` |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...` |
+| `SUPABASE_JWT_SECRET` | Supabase JWT secret | `your-jwt-secret` |
+| `AI_API_KEY` | Groq or OpenAI API key | `gsk_xxxxx` or `sk-xxxxx` |
+| `AI_API_URL` | AI API endpoint | `https://api.groq.com/openai/v1` |
+| `AI_MODEL` | AI model name | `llama-3.1-8b-instant` |
+| `FRONTEND_URL` | Frontend URL for CORS | `https://your-app.vercel.app` |
+
+### Frontend (Vercel) - Required Variables
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `NUXT_PUBLIC_BACKEND_URL` | Backend API URL (no `/api` suffix) | `https://backend.onrender.com` |
+| `NUXT_PUBLIC_SUPABASE_URL` | Supabase project URL | `https://xxxxx.supabase.co` |
+| `NUXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...` |
+
+### Where to Find Supabase Values
+
+1. **Go to Supabase Dashboard** → Your Project
+2. **Settings** → **API**
+   - **Project URL** → `SUPABASE_URL` and `NUXT_PUBLIC_SUPABASE_URL`
+   - **anon public** key → `NUXT_PUBLIC_SUPABASE_ANON_KEY`
+   - **service_role** key → `SUPABASE_SERVICE_ROLE_KEY` (backend only!)
+3. **Settings** → **Auth** → **JWT Settings**
+   - **JWT Secret** → `SUPABASE_JWT_SECRET`
+
+---
+
+## Database Setup
+
+### Step 1: Create Supabase Project
+
+1. Go to [supabase.com](https://supabase.com)
+2. Click "New Project"
+3. Fill in:
+   - **Name:** `brainbite` (or your choice)
+   - **Database Password:** (save this securely)
+   - **Region:** Choose closest to you
+4. Click "Create new project"
+5. Wait 2-3 minutes for project setup
+
+### Step 2: Run Database Schema
+
+1. **Go to Supabase Dashboard** → Your Project
+2. **Click "SQL Editor"** (left sidebar)
+3. **Click "New query"**
+4. **Open `backend/schema.sql`** from your local project
+5. **Copy entire contents** and paste into SQL Editor
+6. **Click "Run"** (or press Ctrl+Enter)
+7. **Verify success:** Should see "Success. No rows returned"
+
+### Step 3: Verify Tables Created
+
+1. **Go to "Table Editor"** (left sidebar)
+2. **Verify these tables exist:**
+   - ✅ `courses`
+   - ✅ `course_pages`
+   - ✅ `questions`
+   - ✅ `question_options`
+   - ✅ `attempts` (optional)
+
+### Step 4: Verify RLS Policies
+
+1. **Go to "Authentication"** → **"Policies"**
+2. **Verify policies exist for:**
+   - `courses` table
+   - `course_pages` table
+   - `questions` table
+   - `question_options` table
+
+---
+
+## Testing & Verification
+
+### Backend Tests
+
+```bash
+# Health check
+curl https://your-backend.onrender.com/api/health
+
+# List courses
+curl https://your-backend.onrender.com/api/courses
+
+# Swagger docs
+# Visit: https://your-backend.onrender.com/api/docs
+```
+
+### Frontend Tests
+
+1. **Visit:** `https://your-app.vercel.app`
+2. **Test flow:**
+   - ✅ Homepage loads
+   - ✅ Sign up → Create account
+   - ✅ Login → Access dashboard
+   - ✅ View courses → See course list
+   - ✅ Generate course → Create new course
+   - ✅ View course → See course details
+   - ✅ Take assessment → Answer questions
+   - ✅ TTS → Listen to content
 
 ### Common Issues
 
-#### CORS Errors
-- **Problem:** Frontend can't call backend API
-- **Solution:** 
-  1. Check `FRONTEND_URL` in backend matches frontend URL exactly
-  2. Ensure backend allows your frontend domain
-  3. Check browser console for exact error
-  4. Verify backend is using `/api` prefix (e.g., `https://backend.com/api/courses`)
+#### ❌ CORS Errors
 
-#### Environment Variables Not Working
-- **Problem:** Frontend shows `undefined` for env vars
-- **Solution:**
-  1. Ensure variables start with `NUXT_PUBLIC_` for frontend
-  2. Redeploy after adding variables
-  3. Clear browser cache
+**Problem:** Frontend can't call backend API
 
-#### Database Connection Issues
-- **Problem:** Backend can't connect to Supabase
-- **Solution:**
-  1. Verify `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are correct
-  2. Check Supabase project is active
-  3. Verify RLS policies allow service role access
+**Solution:**
+1. Check `FRONTEND_URL` in Render matches your Vercel URL exactly
+2. Ensure no trailing slashes
+3. Verify backend allows your frontend domain
+4. Check browser console for exact error
+
+#### ❌ Environment Variables Not Working
+
+**Problem:** Frontend shows `undefined` for env vars
+
+**Solution:**
+1. Ensure variables start with `NUXT_PUBLIC_` for frontend
+2. Redeploy after adding variables
+3. Clear browser cache
+4. Check Vercel deployment logs
+
+#### ❌ Database Connection Issues
+
+**Problem:** Backend can't connect to Supabase
+
+**Solution:**
+1. Verify `SUPABASE_URL` is correct
+2. Verify `SUPABASE_SERVICE_ROLE_KEY` is correct (not anon key)
+3. Check Supabase project is active
+4. Verify RLS policies allow service role access
+
+#### ❌ Build Failures
+
+**Problem:** Deployment fails during build
+
+**Solution:**
+1. Check build logs for specific errors
+2. Verify all dependencies in `package.json`
+3. Ensure Node.js version is compatible
+4. Check for TypeScript errors locally first
 
 ---
 
-## 📝 Part 6: Post-Deployment Checklist
+## Troubleshooting
 
-- [ ] Backend is accessible and responding
-- [ ] Frontend loads without errors
-- [ ] User can sign up and login
-- [ ] Courses list displays correctly
-- [ ] Course generation works
-- [ ] Course detail page shows tabs correctly
-- [ ] Assessment works
-- [ ] TTS (Listen button) works
-- [ ] All environment variables are set
-- [ ] CORS is configured correctly
-- [ ] Supabase RLS policies are active
-- [ ] API endpoints return correct data
+### View Logs
 
----
+**Render (Backend):**
+- Go to service → "Logs" tab
+- Real-time logs available
 
-## 🔄 Part 7: Continuous Deployment
+**Vercel (Frontend):**
+- Go to project → "Deployments" → Click deployment
+- View build logs and runtime logs
 
-Both Vercel and Render automatically deploy on git push to main branch.
-
-### Manual Deployment
-
-If you need to redeploy manually:
-
-**Vercel:**
-- Go to project → Deployments → Click "..." → Redeploy
+### Redeploy
 
 **Render:**
-- Go to service → Manual Deploy → Deploy latest commit
+- Go to service → "Manual Deploy" → "Deploy latest commit"
+
+**Vercel:**
+- Go to project → "Deployments" → Click "..." → "Redeploy"
+
+### Update Environment Variables
+
+**Render:**
+- Go to service → "Environment" tab
+- Edit variables → Save (auto-redeploys)
+
+**Vercel:**
+- Go to project → "Settings" → "Environment Variables"
+- Edit variables → Save → Redeploy
 
 ---
 
-## 🚀 Quick Start Commands
+## 🎉 Deployment Complete!
 
-### Backend (Render)
-```bash
-# Build command
-cd backend && npm install && npm run build
+Your application is now live:
 
-# Start command
-cd backend && npm run start:prod
-```
-
-### Frontend (Vercel)
-```bash
-# Build command (auto-detected)
-npm run build
-
-# Output directory
-.output/public
-```
-
----
-
-## 📞 Support & Troubleshooting
-
-### Backend Logs
-- **Render:** Service → Logs tab
-- **Railway:** Service → Deployments → View logs
-- **Fly.io:** `fly logs`
-
-### Frontend Logs
-- **Vercel:** Project → Deployments → Click deployment → View logs
-- **Netlify:** Site → Deploys → Click deploy → View logs
-
-### Common Commands
-
-```bash
-# Check backend health
-curl https://your-backend.onrender.com/health
-
-# Test API endpoint
-curl https://your-backend.onrender.com/courses
-
-# View backend logs (Render)
-# Use Render dashboard
-
-# View frontend build logs (Vercel)
-# Use Vercel dashboard
-```
-
----
-
-## 🎉 You're Done!
-
-Your application should now be live! Share your URLs:
 - **Frontend:** `https://your-app.vercel.app`
 - **Backend:** `https://your-backend.onrender.com`
+- **API Docs:** `https://your-backend.onrender.com/api/docs`
 
-Remember to:
-1. Keep your API keys secure
-2. Monitor your usage (especially AI API)
-3. Set up error tracking (optional: Sentry)
-4. Configure custom domain (optional)
+### Next Steps
+
+1. ✅ Test all features
+2. ✅ Monitor error logs
+3. ✅ Set up custom domain (optional)
+4. ✅ Configure error tracking (optional: Sentry)
+5. ✅ Set up monitoring (optional)
+
+### Security Checklist
+
+- ✅ Never commit `.env` files
+- ✅ Use service role key only in backend
+- ✅ Use anon key in frontend
+- ✅ Keep API keys secure
+- ✅ Enable RLS policies in Supabase
+- ✅ Monitor API usage
+
+---
+
+## 📞 Support
+
+If you encounter issues:
+
+1. Check deployment logs
+2. Verify environment variables
+3. Test endpoints with curl
+4. Check browser console for frontend errors
+5. Review this guide's troubleshooting section
+
+---
+
+**Happy Deploying! 🚀**
+

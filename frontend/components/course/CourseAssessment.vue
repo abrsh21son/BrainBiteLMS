@@ -308,3 +308,4 @@ const scoreClass = computed(() => {
   return percentage >= 80 ? 'text-green-400' : (percentage >= 50 ? 'text-yellow-400' : 'text-red-400')
 })
 </script>
+

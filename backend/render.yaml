@@ -26,3 +26,4 @@ services:
         value: llama-3.1-8b-instant
       - key: FRONTEND_URL
         sync: false  # Set after frontend deployment
+
