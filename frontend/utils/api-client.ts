@@ -12,14 +12,19 @@ export class ApiClient {
     let baseURL: string;
     try {
       const config = useRuntimeConfig();
-      baseURL = config.public.backendUrl || process.env.NUXT_PUBLIC_BACKEND_URL || 'https://brainbitelms-backend.onrender.com/api';
+      baseURL = config.public.backendUrl || process.env.NUXT_PUBLIC_BACKEND_URL || 'https://brainbitelms-backend.onrender.com';
     } catch {
       // Fallback if useRuntimeConfig is not available (e.g., outside setup context)
-      baseURL = process.env.NUXT_PUBLIC_BACKEND_URL || 'https://brainbitelms-backend.onrender.com/api';
+      baseURL = process.env.NUXT_PUBLIC_BACKEND_URL || 'https://brainbitelms-backend.onrender.com';
     }
     
     // Ensure base URL doesn't end with a slash
     baseURL = baseURL.replace(/\/$/, '');
+    
+    // If baseURL doesn't end with /api, add it
+    if (!baseURL.endsWith('/api')) {
+      baseURL = `${baseURL}/api`;
+    }
     
     // Log in development to help debug
     if (process.dev) {
@@ -63,6 +68,10 @@ export class ApiClient {
     const fullUrl = `${this.getBaseURL()}${url}`;
     
     try {
+      if (process.dev) {
+        console.log(`[API Client] GET ${fullUrl}`);
+      }
+      
       const response = await $fetch<ApiResponse<T>>(fullUrl, {
         ...options,
         method: 'GET',
@@ -71,6 +80,10 @@ export class ApiClient {
           ...options?.headers,
         },
       });
+
+      if (process.dev) {
+        console.log(`[API Client] Response from ${fullUrl}:`, response);
+      }
 
       return this.extractData(response);
     } catch (error: any) {
@@ -96,6 +109,10 @@ export class ApiClient {
     const fullUrl = `${this.getBaseURL()}${url}`;
 
     try {
+      if (process.dev) {
+        console.log(`[API Client] POST ${fullUrl}`, body);
+      }
+      
       const response = await $fetch<ApiResponse<T>>(fullUrl, {
         ...options,
         method: 'POST',
@@ -107,6 +124,10 @@ export class ApiClient {
         // Increase timeout for Render free tier wake-up and course generation (90 seconds)
         timeout: 90000,
       });
+
+      if (process.dev) {
+        console.log(`[API Client] Response from ${fullUrl}:`, response);
+      }
 
       return this.extractData(response);
     } catch (error: any) {
@@ -184,6 +205,10 @@ export class ApiClient {
     // Fallback for direct data
     if (response?.data !== undefined) {
       return response.data;
+    }
+    // If response is already an array (direct array response)
+    if (Array.isArray(response)) {
+      return response as T;
     }
     // If response is already the data (shouldn't happen with our interceptor)
     return response;

@@ -152,13 +152,16 @@ NODE_ENV=development
 NUXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NUXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
 
-# Backend API URL (no /api suffix)
+# Backend API URL (no /api suffix - API client adds it automatically)
+# For local: http://localhost:3000
+# For production: https://brainbitelms-backend.onrender.com
 NUXT_PUBLIC_BACKEND_URL=http://localhost:3000
 ```
 
 **Important:**
 - Use the **anon** key (public key) for the frontend
-- Backend URL should NOT include `/api` suffix
+- Backend URL should NOT include `/api` suffix (the API client adds it automatically)
+- For deployed backend, use the full URL without `/api`: `https://brainbitelms-backend.onrender.com`
 
 ### 3. Installation & Running
 
@@ -297,6 +300,8 @@ Frontend tests can be added using Vitest. Test structure is ready for expansion.
 
 2. **CORS errors**
    - Solution: Verify `FRONTEND_URL` is set correctly in backend `.env`
+   - For deployed backend: Set `FRONTEND_URL` in Render dashboard to your frontend URL (e.g., `https://your-app.vercel.app`)
+   - Multiple origins: Use comma-separated values: `https://app1.vercel.app,https://app2.vercel.app`
 
 3. **Authentication errors**
    - Solution: Check that Supabase keys are correct and not expired
@@ -310,6 +315,130 @@ Frontend tests can be added using Vitest. Test structure is ready for expansion.
 6. **Environment variables not working**
    - Solution: Ensure frontend variables start with `NUXT_PUBLIC_` prefix
    - Solution: Restart dev server after changing `.env` files
+
+### Frontend Not Rendering Courses
+
+If courses are not showing up in the frontend but the backend API works:
+
+1. **Check Browser Console**
+   - Open DevTools (F12) → Console tab
+   - Look for API errors, CORS errors, or network failures
+   - Check the Network tab to see if requests are being made
+
+2. **Verify Backend URL Configuration**
+   - **Local Development:** Set `NUXT_PUBLIC_BACKEND_URL=http://localhost:3000` (no `/api` suffix)
+   - **Production:** Set `NUXT_PUBLIC_BACKEND_URL=https://brainbitelms-backend.onrender.com` (no `/api` suffix)
+   - The API client automatically appends `/api` to the base URL
+
+3. **Check CORS Configuration**
+   - Backend must allow your frontend origin
+   - In Render dashboard → Environment Variables → Set `FRONTEND_URL` to your frontend URL
+   - For local dev: `FRONTEND_URL=http://localhost:3001`
+   - For production: `FRONTEND_URL=https://your-frontend.vercel.app`
+
+4. **Verify API Response Format**
+   - Backend should return: `{"success": true, "data": [...], "timestamp": "..."}`
+   - Test backend directly: `curl https://brainbitelms-backend.onrender.com/api/courses`
+   - Should return JSON with `success: true` and `data` array
+
+5. **Check Authentication (if required)**
+   - Course listing (`GET /api/courses`) does NOT require authentication
+   - Course generation (`POST /api/courses/generate`) DOES require authentication
+   - If you see auth errors, check Supabase configuration
+
+6. **Render Free Tier Cold Start**
+   - First request after inactivity takes ~50 seconds
+   - Wait for backend to wake up, then try again
+   - Consider upgrading to paid plan to avoid cold starts
+
+### Manual Fixes
+
+#### Fix 1: Update Frontend Environment Variable
+
+```bash
+# In frontend/.env or Vercel environment variables
+NUXT_PUBLIC_BACKEND_URL=https://brainbitelms-backend.onrender.com
+```
+
+**Important:** Do NOT include `/api` in the URL. The API client adds it automatically.
+
+#### Fix 2: Update Backend CORS Configuration
+
+In Render dashboard → Your Backend Service → Environment:
+```
+FRONTEND_URL=https://your-frontend-domain.vercel.app
+```
+
+For multiple origins (local + production):
+```
+FRONTEND_URL=http://localhost:3001,https://your-frontend-domain.vercel.app
+```
+
+#### Fix 3: Test Backend API Directly
+
+```bash
+# Test root endpoint
+curl https://brainbitelms-backend.onrender.com/
+
+# Test courses endpoint
+curl https://brainbitelms-backend.onrender.com/api/courses
+
+# Should return:
+# {"success":true,"data":[...],"timestamp":"..."}
+```
+
+#### Fix 4: Clear Browser Cache and Hard Refresh
+
+- Chrome/Edge: `Ctrl+Shift+R` (Windows) or `Cmd+Shift+R` (Mac)
+- Firefox: `Ctrl+F5` (Windows) or `Cmd+Shift+R` (Mac)
+- Safari: `Cmd+Option+R` (Mac)
+
+#### Fix 5: Check Network Tab in Browser DevTools
+
+1. Open DevTools (F12) → Network tab
+2. Reload the page
+3. Look for requests to `/api/courses`
+4. Check:
+   - Status code (should be 200)
+   - Response body (should have `success: true` and `data` array)
+   - Request URL (should be correct backend URL)
+   - CORS headers (should allow your origin)
+
+#### Fix 6: Verify API Client Base URL
+
+The API client automatically handles the base URL. It will:
+- Use `NUXT_PUBLIC_BACKEND_URL` from environment
+- Append `/api` if not already present
+- Default to `https://brainbitelms-backend.onrender.com/api` if not set
+
+Check browser console for: `[API Client] GET https://brainbitelms-backend.onrender.com/api/courses`
+
+### Still Not Working?
+
+1. **Check Backend Logs**
+   - Render dashboard → Logs tab
+   - Look for errors, CORS issues, or request failures
+
+2. **Check Frontend Logs**
+   - Vercel dashboard → Deployment → Logs
+   - Or local terminal where `npm run dev` is running
+
+3. **Verify Database Connection**
+   - Backend should connect to Supabase successfully
+   - Check Supabase dashboard → Database → Connection pooling
+
+4. **Test with Postman/curl**
+   ```bash
+   # Test courses endpoint
+   curl -X GET https://brainbitelms-backend.onrender.com/api/courses \
+     -H "Content-Type: application/json"
+   
+   # Should return courses array
+   ```
+
+5. **Check Supabase RLS Policies**
+   - Ensure `courses` table has proper RLS policies
+   - Run `backend/schema.sql` if tables are missing
 
 ## 📖 Development Guidelines
 

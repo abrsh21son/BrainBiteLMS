@@ -33,7 +33,8 @@ export default defineNuxtConfig({
   
   runtimeConfig: {
     public: {
-      backendUrl: process.env.NUXT_PUBLIC_BACKEND_URL || 'https://brainbitelms-backend.onrender.com/api',
+      // Backend URL without /api suffix (API client adds it automatically)
+      backendUrl: process.env.NUXT_PUBLIC_BACKEND_URL || 'https://brainbitelms-backend.onrender.com',
       supabaseUrl: process.env.NUXT_PUBLIC_SUPABASE_URL,
       supabaseAnonKey: process.env.NUXT_PUBLIC_SUPABASE_ANON_KEY,
     },

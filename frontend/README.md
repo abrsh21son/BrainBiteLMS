@@ -25,6 +25,12 @@ See `.env.example` for required environment variables:
 - `NUXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anon/public key
 - `NUXT_PUBLIC_BACKEND_URL` - Backend API URL (default: http://localhost:3000)
 
+**Important Notes:**
+- `NUXT_PUBLIC_BACKEND_URL` should NOT include `/api` suffix
+- The API client automatically appends `/api` to the base URL
+- For local dev: `http://localhost:3000`
+- For production: `https://brainbitelms-backend.onrender.com`
+
 ## Project Structure
 
 ```

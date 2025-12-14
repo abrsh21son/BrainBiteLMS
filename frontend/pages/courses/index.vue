@@ -294,62 +294,34 @@
 
 <script setup lang="ts">
 definePageMeta({
-  middleware: 'auth',
   layout: 'default',
   ssr: false, // Disable SSR to prevent auth/session mismatch
+  // Note: Courses listing doesn't require auth, but generation does
 })
 
 const { courses, loading, error, fetchCourses } = useCourses()
 const { enroll, isEnrolled, isCompleted, getProgress, getNextLessonIndex, getStatus } = useEnrollment()
 
-// Wait for Supabase user session to be ready before fetching
+// Get user for enrollment features (but courses can be fetched without auth)
 const user = useSupabaseUser()
-const supabase = useSupabaseClient()
-const sessionInitializing = ref(true)
+
+// Fetch courses immediately - backend allows GET /api/courses without auth
+// Only course generation requires authentication
 const hasAttemptedFetch = ref(false)
 
-// Function to check if session is ready and fetch courses
-const checkSessionAndFetch = async () => {
+// Fetch courses on mount (no auth required for listing)
+onMounted(async () => {
   if (hasAttemptedFetch.value) return
   
   try {
-    // Get the current session to ensure it's loaded
-    const { data: { session } } = await supabase.auth.getSession()
-    
-    // Only fetch if we have a valid session with an access token
-    if (session?.access_token && user.value) {
-      sessionInitializing.value = false
-      hasAttemptedFetch.value = true
-      await fetchCourses()
-    } else if (session === null) {
-      // Session is confirmed to be null (not just loading)
-      sessionInitializing.value = false
-    }
+    hasAttemptedFetch.value = true
+    await fetchCourses()
   } catch (error) {
-    console.error('Error checking session:', error)
-    sessionInitializing.value = false
+    console.error('Error fetching courses:', error)
   }
-}
-
-// Watch for user changes
-watch(user, async (newUser) => {
-  if (newUser && !hasAttemptedFetch.value) {
-    await checkSessionAndFetch()
-  }
-}, { immediate: true })
-
-// Also check on mount after Supabase initializes
-onMounted(async () => {
-  // Wait a tick for Supabase to initialize
-  await nextTick()
-  
-  // Check session after a brief delay to ensure Supabase is ready
-  setTimeout(async () => {
-    await checkSessionAndFetch()
-  }, 100)
 })
 
-const pending = computed(() => loading.value || sessionInitializing.value)
+const pending = computed(() => loading.value)
 const searchQuery = ref('')
 const filterSubject = ref('')
 
