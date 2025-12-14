@@ -93,9 +93,10 @@ export class ApiClient {
 
   async post<T>(url: string, body?: any, options?: RequestInit): Promise<T> {
     const headers = await this.getAuthHeaders();
+    const fullUrl = `${this.getBaseURL()}${url}`;
 
     try {
-      const response = await $fetch<ApiResponse<T>>(`${this.getBaseURL()}${url}`, {
+      const response = await $fetch<ApiResponse<T>>(fullUrl, {
         ...options,
         method: 'POST',
         headers: {
@@ -103,10 +104,25 @@ export class ApiClient {
           ...options?.headers,
         },
         body,
+        // Increase timeout for Render free tier wake-up and course generation (90 seconds)
+        timeout: 90000,
       });
 
       return this.extractData(response);
     } catch (error: any) {
+      // Log error details for debugging (only in development)
+      if (process.dev) {
+        console.error('API Error Details:', {
+          url: fullUrl,
+          error,
+          status: error.status || error.statusCode,
+          message: error.message,
+          data: error.data,
+          response: error.response,
+          name: error.name,
+          cause: error.cause,
+        });
+      }
       throw this.handleError(error);
     }
   }
@@ -133,19 +149,29 @@ export class ApiClient {
 
   async delete<T>(url: string, options?: RequestInit): Promise<T> {
     const headers = await this.getAuthHeaders();
+    const fullUrl = `${this.getBaseURL()}${url}`;
 
     try {
-      const response = await $fetch<ApiResponse<T>>(`${this.getBaseURL()}${url}`, {
+      const response = await $fetch<ApiResponse<T>>(fullUrl, {
         ...options,
         method: 'DELETE',
         headers: {
           ...headers,
           ...options?.headers,
         },
+        timeout: 60000,
       });
 
       return this.extractData(response);
     } catch (error: any) {
+      if (process.dev) {
+        console.error('API Error Details:', {
+          url: fullUrl,
+          error,
+          status: error.status || error.statusCode,
+          message: error.message,
+        });
+      }
       throw this.handleError(error);
     }
   }
@@ -232,17 +258,31 @@ export class ApiClient {
       const backendUrl = this.getBaseURL();
       const currentOrigin = process.client ? window.location.origin : 'unknown';
       
+      // Check if this is a Render free tier timeout (backend sleeping)
+      const isRenderTimeout = 
+        backendUrl.includes('render.com') && 
+        (errorMessage.includes('timeout') || errorMessage.includes('aborted') || error.code === 'ETIMEDOUT');
+      
+      if (isRenderTimeout) {
+        return new Error(
+          `Backend is waking up: The Render free tier backend is spinning up (takes ~50 seconds).\n\n` +
+          `Please wait a moment and try again. The first request after inactivity takes longer.\n\n` +
+          `Backend URL: ${backendUrl}\n` +
+          `Tip: Consider upgrading to a paid Render plan to avoid cold starts.`
+        );
+      }
+      
       return new Error(
         `Network error: Could not connect to the backend server at ${backendUrl}.\n\n` +
         `Current frontend origin: ${currentOrigin}\n\n` +
-        `Possible causes:\n` +
-        `1. CORS issue: Backend may not allow requests from ${currentOrigin}\n` +
-        `   → Update backend FRONTEND_URL env var to include this origin\n` +
-        `2. Backend server is down or unreachable\n` +
-        `3. Missing NUXT_PUBLIC_BACKEND_URL environment variable in Vercel\n` +
-        `   → Set it in Vercel project settings → Environment Variables\n` +
-        `4. Network connectivity problem\n\n` +
-        `Check browser DevTools → Network tab for detailed error information.`
+        `Troubleshooting steps:\n` +
+        `1. Check if backend is running: Visit ${backendUrl.replace('/api', '')} in your browser\n` +
+        `2. CORS issue: Verify backend FRONTEND_URL env var includes ${currentOrigin}\n` +
+        `   → In Render dashboard: Settings → Environment → FRONTEND_URL\n` +
+        `3. Vercel env var: Ensure NUXT_PUBLIC_BACKEND_URL is set to ${backendUrl}\n` +
+        `   → In Vercel: Settings → Environment Variables\n` +
+        `4. Backend sleep: If using Render free tier, first request takes ~50s to wake up\n` +
+        `5. Check browser DevTools → Network tab for detailed error information`
       );
     }
     
