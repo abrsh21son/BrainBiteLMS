@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { Request, Response } from 'express';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
@@ -12,19 +13,37 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // Global prefix - all routes will be prefixed with /api
-  // Note: Root route (/) will return 404, use /api instead
   app.setGlobalPrefix('api');
 
   // CORS configuration
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+  // Allow multiple origins (comma-separated) or single origin
+  const allowedOrigins = frontendUrl.includes(',') 
+    ? frontendUrl.split(',').map(url => url.trim())
+    : [frontendUrl];
+  
   app.enableCors({
-    origin: frontendUrl,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, Postman, or curl requests)
+      if (!origin) {
+        return callback(null, true);
+      }
+      // Check if origin is in allowed list
+      if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+        return callback(null, true);
+      }
+      // For development, allow all origins; restrict in production
+      if (process.env.NODE_ENV !== 'production') {
+        return callback(null, true);
+      }
+      callback(new Error('Not allowed by CORS'));
+    },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
     exposedHeaders: ['Content-Type', 'Authorization'],
   });
-  logger.log(`CORS enabled for origin: ${frontendUrl}`);
+  logger.log(`CORS enabled for origin(s): ${frontendUrl}`);
 
   // Global validation pipe
   app.useGlobalPipes(new CustomValidationPipe());
@@ -60,13 +79,40 @@ async function bootstrap() {
     },
   });
 
+  // Handle root route and favicon using Express directly
+  const httpAdapter = app.getHttpAdapter();
+  httpAdapter.get('/', (req: Request, res: Response) => {
+    res.json({
+      message: 'BrainBite API',
+      version: '1.0.0',
+      status: 'running',
+      documentation: '/api/docs',
+      health: '/api/health',
+      endpoints: {
+        api: '/api',
+        courses: '/api/courses',
+        swagger: '/api/docs',
+      },
+    });
+  });
+  
+  // Handle favicon requests
+  httpAdapter.get('/favicon.ico', (req: Request, res: Response) => {
+    res.status(204).send();
+  });
+
   const port = process.env.PORT || 3000;
   await app.listen(port);
 
-  logger.log(`🚀 Application is running on: http://localhost:${port}`);
-  logger.log(`📚 API Root: http://localhost:${port}/api`);
-  logger.log(`📚 Swagger documentation: http://localhost:${port}/api/docs`);
-  logger.log(`📚 Health check: http://localhost:${port}/api/health`);
+  // Get the actual URL (Render provides RENDER_EXTERNAL_URL)
+  const baseUrl = process.env.RENDER_EXTERNAL_URL || 
+                  process.env.RAILWAY_PUBLIC_DOMAIN || 
+                  `http://localhost:${port}`;
+  
+  logger.log(`🚀 Application is running on: ${baseUrl}`);
+  logger.log(`📚 API Root: ${baseUrl}/api`);
+  logger.log(`📚 Swagger documentation: ${baseUrl}/api/docs`);
+  logger.log(`📚 Health check: ${baseUrl}/api/health`);
 }
 
 bootstrap();
