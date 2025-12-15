@@ -130,7 +130,7 @@
             </div>
 
             <!-- Success Message -->
-            <div v-if="successMsg" class="rounded-lg bg-green-500/20 border border-green-500/50 p-4 animate-fade-in-up">
+            <div v-if="displaySuccessMsg" class="rounded-lg bg-green-500/20 border border-green-500/50 p-4 animate-fade-in-up">
               <div class="flex">
                 <div class="flex-shrink-0">
                   <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
@@ -138,7 +138,7 @@
                   </svg>
                 </div>
                 <div class="ml-3 flex-1">
-                  <p class="text-sm text-green-400 font-medium">{{ successMsg }}</p>
+                  <p class="text-sm text-green-400 font-medium">{{ displaySuccessMsg }}</p>
                 </div>
               </div>
             </div>
@@ -252,7 +252,7 @@ definePageMeta({
 
 const user = useSupabaseUser()
 const router = useRouter()
-const { loading, errorMsg, successMsg, handleLogin, resendConfirmationEmail, handlePasswordReset: resetPassword } = useAuth()
+const { loading, errorMsg, successMsg, handleLogin, resendConfirmationEmail, handlePasswordReset: resetPassword, clearMessages } = useAuth()
 
 const email = ref('')
 const password = ref('')
@@ -261,6 +261,28 @@ const showPassword = ref(false)
 const showForgotPassword = ref(false)
 const resetEmail = ref('')
 const emailError = ref('')
+const emailVerified = ref(false)
+
+// Check if user just verified their email
+onMounted(() => {
+  if (process.client) {
+    const urlParams = new URLSearchParams(window.location.search)
+    const verified = urlParams.get('verified')
+    if (verified === 'true') {
+      emailVerified.value = true
+      // Clean up URL
+      router.replace({ query: {} })
+    }
+  }
+})
+
+// Computed success message that includes verification status
+const displaySuccessMsg = computed(() => {
+  if (emailVerified.value) {
+    return 'Email verified successfully! Please sign in with your password.'
+  }
+  return successMsg.value
+})
 
 const validateEmail = () => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/

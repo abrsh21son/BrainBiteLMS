@@ -65,9 +65,22 @@ export const useAuth = () => {
     successMsg.value = null;
 
     try {
+      // Get frontend URL from environment or use current origin
+      let frontendUrl = '';
+      if (process.client) {
+        const config = useRuntimeConfig();
+        frontendUrl = (config.public.frontendUrl as string) || window.location.origin;
+      } else {
+        const config = useRuntimeConfig();
+        frontendUrl = (config.public.frontendUrl as string) || '';
+      }
+
       const { data, error } = await client.auth.signUp({
         email: email.trim(),
         password,
+        options: {
+          emailRedirectTo: `${frontendUrl}/login?verified=true`,
+        },
       });
 
       if (error) {
@@ -125,8 +138,18 @@ export const useAuth = () => {
     successMsg.value = null;
 
     try {
+      // Get frontend URL from environment or use current origin
+      let frontendUrl = '';
+      if (process.client) {
+        const config = useRuntimeConfig();
+        frontendUrl = (config.public.frontendUrl as string) || window.location.origin;
+      } else {
+        const config = useRuntimeConfig();
+        frontendUrl = (config.public.frontendUrl as string) || '';
+      }
+
       const { error } = await client.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${process.client ? window.location.origin : ''}/reset-password`,
+        redirectTo: `${frontendUrl}/reset-password`,
       });
 
       if (error) {

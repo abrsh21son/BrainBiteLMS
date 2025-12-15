@@ -14,14 +14,28 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
 
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
-  const allowedOrigins = frontendUrl.includes(',') 
-    ? frontendUrl.split(',').map(url => url.trim())
-    : [frontendUrl];
+  // Use environment variable for frontend URL, fallback to localhost only in development
+  const frontendUrl = process.env.FRONTEND_URL || 
+    (process.env.NODE_ENV === 'development' ? 'http://localhost:3001' : '');
+  
+  // Handle empty frontend URL in production - log warning but allow all origins as fallback
+  const allowedOrigins = frontendUrl 
+    ? (frontendUrl.includes(',') 
+        ? frontendUrl.split(',').map(url => url.trim())
+        : [frontendUrl])
+    : [];
+  
+  if (!frontendUrl && process.env.NODE_ENV === 'production') {
+    logger.warn('⚠️  FRONTEND_URL environment variable is not set in production! CORS may be restrictive.');
+  }
   
   app.enableCors({
     origin: (origin, callback) => {
       if (!origin) {
+        return callback(null, true);
+      }
+      // If no frontend URL is configured, allow all origins (fallback)
+      if (allowedOrigins.length === 0) {
         return callback(null, true);
       }
       if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {

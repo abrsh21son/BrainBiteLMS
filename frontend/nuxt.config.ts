@@ -35,6 +35,8 @@ export default defineNuxtConfig({
     public: {
       // Backend URL without /api suffix (API client adds it automatically)
       backendUrl: process.env.NUXT_PUBLIC_BACKEND_URL || 'http://localhost:3000',
+      // Frontend URL for redirects (used in email verification, password reset, etc.)
+      frontendUrl: process.env.NUXT_PUBLIC_FRONTEND_URL || '',
       supabaseUrl: process.env.NUXT_PUBLIC_SUPABASE_URL,
       supabaseAnonKey: process.env.NUXT_PUBLIC_SUPABASE_ANON_KEY,
     },
